@@ -13,6 +13,7 @@ from .health import HealthReport, check_health
 from .lifecycle import LifecycleResult, WalletLifecycle
 from .live_contract import ContractCheck, LiveContractReport, LiveContractValidator
 from .live_validation import LiveValidationReport, ValidationCheck, validate_gmgn_provider
+from .live_validation_run import LiveValidationRun, LiveValidationRunner
 from .market_feed import FeedCycleReport, InMemoryMarketSource, LiveMarketFeed, MarketSnapshotSource
 from .market_observation import MarketObservationAdapter, MarketSnapshot
 from .manual_qa import ManualQAReport, build_manual_qa_report
@@ -46,7 +47,7 @@ __all__ = [
     "CircuitBreaker", "ClusterReport", "ConfigurationError", "ContractCheck", "CrossTokenEvidence", "FundingAwareProvider",
     "FundingObservation", "FundingVerifier", "GMGNAdapter", "GMGNLiveProvider",
     "GMGNRoute", "GmgnCli", "GmgnCliConfig", "GmgnCliError", "GmgnEndpointMap",
-    "HealthReport", "LifecycleResult", "LiveContractReport", "LiveContractValidator", "LiveMarketFeed", "LiveValidationReport", "ValidationCheck",
+    "HealthReport", "LifecycleResult", "LiveMarketFeed", "LiveValidationReport", "LiveValidationRun", "LiveValidationRunner", "LiveContractReport", "LiveContractValidator", "ValidationCheck",
     "FeedCycleReport", "InMemoryMarketSource", "MarketSnapshotSource",
     "ManualQAReport", "MarketObservationAdapter", "MarketSnapshot", "NormalizedWallet", "NullProvider",
     "JsonFormatter", "Observability", "RuntimeMetrics", "configure_logging",
