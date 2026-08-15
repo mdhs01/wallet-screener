@@ -22,17 +22,20 @@ Wallet screening engine based on the uploaded GMGN Wallet Screening Framework.
 - Phase 13 persistent, idempotent paper-tracking runtime
 - Phase 14 market snapshot → paper-observation normalization
 - Phase 15 read-only market feed polling with duplicate protection
+- Phase 17 bounded live-market orchestration
 
 ## Screening flow
 
 Discovery → Surface Filter → Performance → Profit Distribution → Behavior → Risk → Cross-Token → Funding/Cluster → Manual Trade Sample → Manual Review → Paper Track → Watchlist
 
-## Phase 15: Market Feed
+## Phase 17: Live Market Loop
 
-`market_feed.py` provides a source-agnostic polling layer:
+`market_loop.py` adds a bounded orchestration layer around `LiveMarketFeed`.
 
 ```text
-MarketSnapshotSource
+Market Source
+      ↓
+LiveMarketFeed
       ↓
 MarketObservationAdapter
       ↓
@@ -41,35 +44,31 @@ PersistentPaperRuntime
 SQLite
 ```
 
-`LiveMarketFeed.cycle()` performs one read-only ingestion cycle. `run_polling()` repeats cycles at a configurable interval.
+`LiveMarketLoop.run()` executes a configured number of read-only polling cycles and aggregates fetched, accepted, duplicate, rejected, and error counts.
 
-Each cycle reports fetched, accepted, duplicate, rejected, and source-error counts. Duplicate observations are left to the persistent paper store's deterministic idempotency guard.
+The loop is intentionally bounded so integration tests are deterministic and the repository does not silently create an unbounded background worker.
 
-The repository currently includes `InMemoryMarketSource` for deterministic integration tests. A GMGN-specific market source is intentionally not hard-coded until its exact supported market contract is verified.
+A real GMGN source can be supplied through `LiveMarketFeed` after its exact upstream payload contract and credentials are verified. Until then, `InMemoryMarketSource` remains the deterministic test source.
 
-No trade execution, wallet signing, or order placement occurs in this phase.
+No trade execution, wallet signing, swap, or order placement occurs in Phase 17.
 
-See `docs/PHASE15_MARKET_FEED.md`.
+See `docs/PHASE17_LIVE_MARKET_LOOP.md`.
+
+## Phase 15: Market Feed
+
+`market_feed.py` provides a source-agnostic polling layer. Each cycle reports fetched, accepted, duplicate, rejected, and source-error counts. Duplicate observations are protected by the persistent paper store's deterministic idempotency guard.
 
 ## Phase 13: Persistent Live Paper Tracking
 
 `paper_persistence.py` stores every paper observation in SQLite with a deterministic unique key. Duplicate observations are ignored, so repeated polling/restarts do not inflate the sample.
 
-`paper_runtime.py` provides a read-only `PersistentPaperRuntime` that accepts observations from a market-data source, persists them, and feeds newly inserted observations into the wallet lifecycle.
-
-The lifecycle now reloads persisted paper observations when evaluating a wallet. A process restart therefore does not reset the 3–7 day evidence window.
-
-This phase does not invent market observations, place orders, or perform live trading.
+`paper_runtime.py` provides a read-only `PersistentPaperRuntime` that accepts observations from a market-data source and persists newly inserted observations.
 
 ## Phase 12: Live Validation
 
 `live_validation.py` provides a read-only runtime validation report. It checks provider capabilities, live candidate discovery, wallet metrics, current holdings, and recent activity.
 
 The validator only reports `ready=true` after at least one wallet is returned and all required checks pass. Empty discovery is not treated as a successful live test.
-
-Run this validation only in an environment where the configured `gmgn-cli` and credentials are available. No credentials are stored in the repository and no trading operation is performed.
-
-See `docs/PHASE12_LIVE_VALIDATION.md`.
 
 ## Phase 11: Production Hardening
 
