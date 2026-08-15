@@ -5,6 +5,7 @@ import json
 import os
 
 from .gmgn_provider import GMGNLiveProvider
+from .persistence import ScreeningStore
 from .pipeline import ScreeningPipeline
 from .providers import NullProvider
 
@@ -17,7 +18,7 @@ def main() -> None:
     args = parser.parse_args()
 
     provider = GMGNLiveProvider() if args.provider == "gmgn" else NullProvider()
-    pipeline = ScreeningPipeline(provider=provider)
+    pipeline = ScreeningPipeline(provider=provider, store=ScreeningStore(args.db))
     report = pipeline.run(max_candidates=args.max_candidates)
     print(json.dumps({
         "run_id": report.run_id,
