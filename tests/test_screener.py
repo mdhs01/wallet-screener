@@ -1,5 +1,5 @@
 from src.wallet_screener import ScreenerConfig, WalletScreener
-from src.wallet_screener.models import WalletMetrics
+from src.wallet_screener.models import TradeObservation, WalletMetrics
 from src.wallet_screener.providers import CrossTokenEvidence, WalletDataProvider
 
 
@@ -14,7 +14,7 @@ class FixtureProvider(WalletDataProvider):
             earliest_bought_hits=3,
         )
         self.holdings = holdings or []
-        self.trades = trades or []
+        self.trades = trades if trades is not None else good_trades()
         self.funding = funding or {"common_funder_count": metrics.common_funder_count, "cluster_size": metrics.cluster_size}
 
     def discover_wallets(self):
@@ -35,6 +35,33 @@ class FixtureProvider(WalletDataProvider):
 
     def get_funding_cluster(self, address):
         return self.funding
+
+
+def good_trades():
+    trades = []
+    base = 1_000_000
+    for i in range(20):
+        launch = base + i * 86_400
+        trades.append(
+            TradeObservation(
+                token=f"TOKEN-{i % 10}",
+                launch_ts=launch,
+                entry_ts=launch + 300,
+                exit_ts=launch + 3_900,
+                buy_size_usd=1_000,
+                liquidity_at_entry_usd=20_000,
+                realized_pnl_usd=250 if i % 5 else -50,
+                realized_roi=0.25 if i % 5 else -0.05,
+                transfer_in=(i == 0),
+                actionable=(i % 4 != 0),
+                partial_tp=(i % 3 == 0),
+                residual_hold=(i % 2 == 0),
+                cut_loss=(i % 5 == 0),
+                accumulate_underwater=(i % 4 == 0),
+                did_not_buy=False,
+            )
+        )
+    return trades
 
 
 def good_metrics():
@@ -80,14 +107,24 @@ def good_metrics():
     )
 
 
-def test_good_wallet_passes_deep_pipeline():
-    screener = WalletScreener(FixtureProvider(good_metrics()), ScreenerConfig())
-    result = screener.screen("wallet-good")
+def test_good_wallet_passes_when_manual_gate_is_disabled():
+    config = ScreenerConfig()
+    config.manual_qa.require_manual_review_before_watchlist = False
+    result = WalletScreener(FixtureProvider(good_metrics()), config).screen("wallet-good")
     assert result.passed is True
     assert result.stage == "final_watchlist"
     assert result.score >= 7.0
     assert "cross_token" in result.layer_scores
     assert "actionability" in result.layer_scores
+    assert "manual_trade_qa" in result.layer_scores
+    assert result.manual_qa["sample_ready"] is True
+
+
+def test_default_flow_stops_for_manual_review():
+    result = WalletScreener(FixtureProvider(good_metrics()), ScreenerConfig()).screen("wallet-good")
+    assert result.passed is False
+    assert result.stage == "manual_review_required"
+    assert "automated_trade_sample_ready_for_human_verification" in result.reasons
 
 
 def test_low_win_rate_is_rejected_at_surface():
@@ -114,7 +151,7 @@ def test_lottery_dependency_is_warning_not_automatic_surface_rejection():
     metrics.profit_buckets = {"<-50%": 1, "-50%–0%": 1, "0–2x": 2, "2–5x": 1, ">5x": 10}
     result = WalletScreener(FixtureProvider(metrics), ScreenerConfig()).screen(metrics.address)
     assert "lottery_dependency" in result.warnings
-    assert result.stage in {"deep_review", "final_watchlist"}
+    assert result.stage in {"deep_review", "manual_review_required", "final_watchlist"}
 
 
 def test_current_holdings_can_reduce_conviction():
@@ -134,3 +171,29 @@ def test_style_change_is_a_warning():
     metrics.style_change_score = 0.90
     result = WalletScreener(FixtureProvider(metrics), ScreenerConfig()).screen(metrics.address)
     assert "style_change_detected" in result.warnings
+
+
+def test_insufficient_manual_sample_blocks_progression():
+    metrics = good_metrics()
+    result = WalletScreener(FixtureProvider(metrics, trades=good_trades()[:10]), ScreenerConfig()).screen(metrics.address)
+    assert "manual_trade_sample_insufficient" in result.failed_rules
+    assert result.passed is False
+
+
+def test_manual_sample_catches_high_transfer_in_rate():
+    metrics = good_metrics()
+    trades = good_trades()
+    for trade in trades[:6]:
+        trade.transfer_in = True
+    result = WalletScreener(FixtureProvider(metrics, trades=trades), ScreenerConfig()).screen(metrics.address)
+    assert "manual_transfer_in_rate_too_high" in result.failed_rules
+
+
+def test_manual_sample_exposes_slow_entry_behavior():
+    metrics = good_metrics()
+    trades = good_trades()
+    for trade in trades:
+        trade.entry_ts = trade.launch_ts + 1_800
+    result = WalletScreener(FixtureProvider(metrics, trades=trades), ScreenerConfig()).screen(metrics.address)
+    assert "median_entry_latency_above_target" in result.warnings
+    assert result.manual_qa["median_entry_latency_minutes"] == 30.0
