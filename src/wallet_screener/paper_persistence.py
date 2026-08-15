@@ -73,6 +73,16 @@ class PaperObservationStore:
             ).fetchall()
         return [PaperObservation(**json.loads(row["payload_json"])) for row in rows]
 
+    def count_observations(self) -> int:
+        with self._connect() as db:
+            row = db.execute("SELECT COUNT(*) AS count FROM paper_observations").fetchone()
+        return int(row["count"] if row else 0)
+
+    def oldest_observation_ts(self) -> int | None:
+        with self._connect() as db:
+            row = db.execute("SELECT MIN(signal_ts) AS oldest FROM paper_observations").fetchone()
+        return int(row["oldest"]) if row and row["oldest"] is not None else None
+
     def summary(self, wallet: str, tracker: PaperTracker) -> PaperTrackSummary:
         tracker_for_wallet = PaperTracker(
             min_days=tracker.min_days,
