@@ -10,6 +10,7 @@ from .gmgn_openapi_contract import GMGNRoute, route_table
 from .gmgn_provider import GMGNLiveProvider
 from .health import HealthReport, check_health
 from .lifecycle import LifecycleResult, WalletLifecycle
+from .live_validation import LiveValidationReport, ValidationCheck, validate_gmgn_provider
 from .manual_qa import ManualQAReport, build_manual_qa_report
 from .models import ScreeningResult, TradeObservation, WalletMetrics
 from .normalized import NormalizedWallet, SchemaError
@@ -35,12 +36,12 @@ __all__ = [
     "CircuitBreaker", "ClusterReport", "CrossTokenEvidence", "FundingAwareProvider",
     "FundingObservation", "FundingVerifier", "GMGNAdapter", "GMGNLiveProvider",
     "GMGNRoute", "GmgnCli", "GmgnCliConfig", "GmgnCliError", "GmgnEndpointMap",
-    "HealthReport", "LifecycleResult", "WalletLifecycle", "ManualQAReport", "NormalizedWallet",
-    "NullProvider", "PaperObservation", "PaperTrackConfig", "PaperTrackSummary",
-    "PaperTracker", "PipelineReport", "ProviderConfig", "RevalidationSnapshot", "RetryPolicy",
-    "SchemaError", "ScreeningPipeline", "ScreeningResult", "ScreeningStore", "ScreenerConfig",
-    "SolanaRpcClient", "SolscanAdapter", "TradeObservation", "WalletDataProvider", "WalletLink",
-    "WalletMetrics", "WalletScreener", "WatchlistCategory", "WatchlistEntry", "WatchlistManager",
-    "WatchlistStatus", "analyze_cluster", "build_manual_qa_report", "check_health", "classify_category",
-    "route_table", "with_retry",
+    "HealthReport", "LifecycleResult", "WalletLifecycle", "LiveValidationReport", "ValidationCheck",
+    "ManualQAReport", "NormalizedWallet", "NullProvider", "PaperObservation", "PaperTrackConfig",
+    "PaperTrackSummary", "PaperTracker", "PipelineReport", "ProviderConfig", "RevalidationSnapshot",
+    "RetryPolicy", "SchemaError", "ScreeningPipeline", "ScreeningResult", "ScreeningStore",
+    "ScreenerConfig", "SolanaRpcClient", "SolscanAdapter", "TradeObservation", "WalletDataProvider",
+    "WalletLink", "WalletMetrics", "WalletScreener", "WatchlistCategory", "WatchlistEntry",
+    "WatchlistManager", "WatchlistStatus", "analyze_cluster", "build_manual_qa_report", "check_health",
+    "classify_category", "route_table", "validate_gmgn_provider", "with_retry",
 ]
