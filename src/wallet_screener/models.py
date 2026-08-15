@@ -35,12 +35,29 @@ class TradeObservation:
     partial_tp: bool = False
     residual_hold: bool = False
     cut_loss: bool = False
+    accumulate_underwater: bool = False
+    did_not_buy: bool = False
 
     @property
     def hold_minutes(self) -> float:
         if self.entry_ts is None or self.exit_ts is None or self.exit_ts < self.entry_ts:
             return 0.0
         return (self.exit_ts - self.entry_ts) / 60.0
+
+    @property
+    def entry_latency_minutes(self) -> float | None:
+        if self.launch_ts is None or self.entry_ts is None or self.entry_ts < self.launch_ts:
+            return None
+        return (self.entry_ts - self.launch_ts) / 60.0
+
+    @property
+    def is_complete_for_manual_qa(self) -> bool:
+        return (
+            self.launch_ts is not None
+            and self.entry_ts is not None
+            and self.buy_size_usd > 0
+            and self.liquidity_at_entry_usd > 0
+        )
 
 
 @dataclass(slots=True)
@@ -128,3 +145,4 @@ class ScreeningResult:
     warnings: list[str] = field(default_factory=list)
     metrics: WalletMetrics | None = None
     layer_scores: dict[str, float] = field(default_factory=dict)
+    manual_qa: dict | None = None
