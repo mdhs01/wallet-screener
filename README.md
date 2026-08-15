@@ -29,10 +29,34 @@ Wallet screening engine based on the uploaded GMGN Wallet Screening Framework.
 - Phase 22 unified environment/runtime configuration with validation
 - Phase 23 structured observability and runtime metrics
 - Phase 24 deterministic full-runtime integration coverage
+- Phase 25 CI quality gate
+- Phase 26 read-only live provider contract validation boundary
 
 ## Screening flow
 
 Discovery → Surface Filter → Performance → Profit Distribution → Behavior → Risk → Cross-Token → Funding/Cluster → Manual Trade Sample → Manual Review → Paper Track → Watchlist
+
+## Phase 26: Live Contract Validation
+
+`live_contract.py` provides a provider-neutral, read-only contract validator. It executes explicitly supplied capability checks and reports every failed check with its exception/detail rather than hiding live dependency failures.
+
+The intended live checks are:
+
+1. GMGN CLI executable/configuration
+2. Smart Money discovery
+3. Wallet metrics normalization
+4. Holdings normalization
+5. Recent activity normalization
+6. Market snapshot normalization
+7. Confirmation that the validation path performs no trade/signing operation
+
+The validator itself does not make up live results. `passed=true` is possible only after every configured check returns successfully in a real deployment environment. Deterministic CI continues to use mocks and does not require GMGN credentials.
+
+See `docs/PHASE26_LIVE_CONTRACT_VALIDATION.md`.
+
+## Phase 25: CI Quality Gate
+
+GitHub Actions runs the Python test suite and source compilation checks on pushes and pull requests. CI is deterministic and does not require live API credentials.
 
 ## Phase 24: Full Integration Testing
 
@@ -56,8 +80,6 @@ The test deliberately uses `NullProvider` and `InMemoryMarketSource`; it require
 Use `configure_logging()` to enable JSON logs and `Observability` / `RuntimeMetrics` to record runtime state. The implementation has no external monitoring dependency; a Prometheus or other exporter can be added later without changing screening semantics.
 
 Observability is read-only and has no trading or wallet-signing side effects.
-
-See `docs/PHASE23_OBSERVABILITY.md`.
 
 ## Phase 22: Configuration & Secrets
 
