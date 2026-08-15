@@ -11,6 +11,7 @@ from .gmgn_openapi_contract import GMGNRoute, route_table
 from .gmgn_provider import GMGNLiveProvider
 from .health import HealthReport, check_health
 from .lifecycle import LifecycleResult, WalletLifecycle
+from .live_contract import ContractCheck, LiveContractReport, LiveContractValidator
 from .live_validation import LiveValidationReport, ValidationCheck, validate_gmgn_provider
 from .market_feed import FeedCycleReport, InMemoryMarketSource, LiveMarketFeed, MarketSnapshotSource
 from .market_observation import MarketObservationAdapter, MarketSnapshot
@@ -42,10 +43,10 @@ from .watchlist import (
 
 __all__ = [
     "ApiClient", "ApiConfig", "ApiError", "ApiResponse",
-    "CircuitBreaker", "ClusterReport", "ConfigurationError", "CrossTokenEvidence", "FundingAwareProvider",
+    "CircuitBreaker", "ClusterReport", "ConfigurationError", "ContractCheck", "CrossTokenEvidence", "FundingAwareProvider",
     "FundingObservation", "FundingVerifier", "GMGNAdapter", "GMGNLiveProvider",
     "GMGNRoute", "GmgnCli", "GmgnCliConfig", "GmgnCliError", "GmgnEndpointMap",
-    "HealthReport", "LifecycleResult", "LiveMarketFeed", "LiveValidationReport", "ValidationCheck",
+    "HealthReport", "LifecycleResult", "LiveContractReport", "LiveContractValidator", "LiveMarketFeed", "LiveValidationReport", "ValidationCheck",
     "FeedCycleReport", "InMemoryMarketSource", "MarketSnapshotSource",
     "ManualQAReport", "MarketObservationAdapter", "MarketSnapshot", "NormalizedWallet", "NullProvider",
     "JsonFormatter", "Observability", "RuntimeMetrics", "configure_logging",
