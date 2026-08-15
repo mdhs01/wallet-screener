@@ -27,10 +27,28 @@ Wallet screening engine based on the uploaded GMGN Wallet Screening Framework.
 - Phase 19 unified one-cycle runtime joining screening, market feed, persistence, and lifecycle
 - Phase 21 runtime CLI shell with explicit once/scheduled/validate/health commands
 - Phase 22 unified environment/runtime configuration with validation
+- Phase 23 structured observability and runtime metrics
 
 ## Screening flow
 
 Discovery → Surface Filter → Performance → Profit Distribution → Behavior → Risk → Cross-Token → Funding/Cluster → Manual Trade Sample → Manual Review → Paper Track → Watchlist
+
+## Phase 23: Observability & Monitoring
+
+`observability.py` adds provider-neutral operational visibility:
+
+- JSON structured logging
+- runtime counters and gauges
+- cycle duration timings
+- market-feed and paper-observation counters
+- standardized error counter
+- thread-safe in-process metric snapshots
+
+Use `configure_logging()` to enable JSON logs and `Observability` / `RuntimeMetrics` to record runtime state. The implementation has no external monitoring dependency; a Prometheus or other exporter can be added later without changing screening semantics.
+
+Observability is read-only and has no trading or wallet-signing side effects.
+
+See `docs/PHASE23_OBSERVABILITY.md`.
 
 ## Phase 22: Configuration & Secrets
 
@@ -50,8 +68,6 @@ GMGN_API_KEY
 ```
 
 The configuration layer validates numeric values and supported providers. Secrets are read from environment variables and are not accepted as CLI arguments or stored in source code.
-
-This keeps runtime settings separate from screening logic and gives the deployment layer one consistent configuration object.
 
 ## Phase 21: Runtime CLI
 
