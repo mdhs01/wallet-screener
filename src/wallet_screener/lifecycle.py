@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from time import time
 from typing import Any
 
+from .paper_persistence import PaperObservationStore
 from .paper_tracking import PaperObservation, PaperTracker
 from .persistence import ScreeningStore
 from .watchlist import WatchlistCategory, WatchlistManager, classify_category
@@ -21,9 +22,9 @@ class LifecycleResult:
 class WalletLifecycle:
     """Connect screening persistence, paper tracking, and watchlist state.
 
-    This layer does not fetch market data itself. Callers add observations when
-    real-time or scheduled market data is available, keeping provider concerns
-    separate from lifecycle decisions.
+    Paper observations are persisted in SQLite and reloaded for each wallet
+    evaluation, so a process restart does not erase paper-track evidence.
+    This layer never fetches market data or places orders.
     """
 
     def __init__(
@@ -31,13 +32,21 @@ class WalletLifecycle:
         store: ScreeningStore | None = None,
         paper_tracker: PaperTracker | None = None,
         watchlist: WatchlistManager | None = None,
+        paper_store: PaperObservationStore | None = None,
     ) -> None:
         self.store = store or ScreeningStore()
         self.paper_tracker = paper_tracker or PaperTracker()
         self.watchlist = watchlist or WatchlistManager()
+        self.paper_store = paper_store or PaperObservationStore(self.store.path)
 
-    def add_paper_observation(self, observation: PaperObservation) -> None:
-        self.paper_tracker.add(observation)
+    def add_paper_observation(self, observation: PaperObservation) -> bool:
+        inserted = self.paper_store.add(observation, int(time()))
+        if inserted:
+            self.paper_tracker.add(observation)
+        return inserted
+
+    def _paper_summary(self, wallet: str):
+        return self.paper_store.summary(wallet, self.paper_tracker)
 
     def evaluate_wallet(
         self,
@@ -54,7 +63,7 @@ class WalletLifecycle:
         notes: list[str] | None = None,
     ) -> LifecycleResult:
         ts = timestamp or int(time())
-        paper_summary = self.paper_tracker.summarize(wallet)
+        paper_summary = self._paper_summary(wallet)
         selected_category = category or WatchlistCategory.EXPERIMENTAL
 
         entry = self.watchlist.upsert(
