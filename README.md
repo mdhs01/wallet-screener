@@ -5,65 +5,40 @@ Wallet screening engine based on the uploaded GMGN Wallet Screening Framework.
 ## Current scope
 
 - Provider-agnostic architecture
-- No API keys required yet
 - Mock/in-memory provider for development and tests
 - Layered screening pipeline
 - Configurable thresholds
 - Explainable scoring, rejection reasons, warnings, and layer scores
 - Phase 3 automated preparation and gating for the required 15–20 trade manual review
 - Phase 4 paper-tracking engine for 3–7 day validation
+- Phase 5 dynamic watchlist and edge-decay revalidation
+- Phase 6 provider-neutral HTTP/API transport layer
+- Phase 7 verified GMGN data contract and official `gmgn-cli` live-data adapter
 
 ## Screening flow
 
 Discovery → Surface Filter → Performance → Profit Distribution → Behavior → Risk → Cross-Token → Funding/Cluster → Manual Trade Sample → Manual Review → Paper Track → Watchlist
 
-## Phase 3: Manual Trade Verification
+## Phase 7: Verified GMGN Mapping
 
-Before a wallet can enter the final watchlist, the engine requests a trade sample of up to 20 trades and requires at least 15 by default.
+The live integration uses the official `gmgn-cli` interface rather than scraping `gmgn.ai`. Current documented read-only wallet queries include:
 
-The automated QA layer checks:
+- `portfolio stats --period 7d|30d`
+- `portfolio stats --period 30d`
+- `portfolio holdings`
+- `portfolio activity`
+- `track smartmoney`
+- `market trending`
 
-- launch time vs entry time and entry latency
-- entry size and liquidity-at-entry completeness
-- actionable-entry rate
-- transfer-in rate
-- repeated trade-behavior patterns
-- partial TP / residual hold / cut-loss / underwater accumulation evidence
-- whether the sample is sufficiently complete for human review
+The project records the documented GMGN OpenAPI route paths and rate-limit weights in `gmgn_openapi_contract.py`.
 
-The engine does **not** claim that automated checks replace the manual review described by the source framework. By default, a passing automated sample produces `manual_review_required` rather than `final_watchlist`.
+`GMGNLiveProvider` maps documented portfolio stats, holdings and activity into the internal screening models and deduplicates wallet candidates from Smart Money activity.
 
-## Phase 4: Paper Tracking
+The provider does **not** fabricate evidence for source-framework layers that are not directly established by these queries. Wallet Radar / Shared Holdings / Earliest Bought, synchronized funding/cluster analysis, and verified launch-to-entry/liquidity trade evidence remain explicit capabilities for the next integration phase.
 
-`PaperTracker` is API-agnostic and never places live orders. It records hypothetical observations and evaluates the evidence needed before watchlist promotion.
+GMGN portfolio holdings currently require the provider's critical authentication flow; credentials are never stored in source control.
 
-The default tracking window is configurable from 3 to 7 days.
-
-The tracker records and summarizes:
-
-- signal timestamp and token
-- wallet entry/exit and hypothetical entry/exit
-- liquidity at signal
-- actionable / false-signal / missed-signal status
-- entry latency
-- hypothetical return
-- slippage
-- cumulative return
-- maximum drawdown
-
-The implementation includes readiness gates for minimum observations, actionable rate, false signals, missed signals, positive average hypothetical return, and maximum drawdown. These numeric gates are implementation defaults and remain tunable; the uploaded framework itself specifies the 3–7 day tracking period and the metrics to record.
-
-## Configuration
-
-All Phase 3 and Phase 4 thresholds are configurable through `ScreenerConfig.manual_qa`, `ScreenerConfig.actionability`, and `ScreenerConfig.paper_track`.
-
-## Status
-
-Phase 0–2: foundation, schemas, configuration, provider interfaces, analytics, and layered screening.
-
-Phase 3: manual trade sample verification engine and watchlist gate implemented.
-
-Phase 4: paper-tracking engine implemented and exported; external API integration is intentionally deferred.
+See `docs/PHASE7_API_MAPPING.md` for the mapping and capability boundaries.
 
 ## Run
 
