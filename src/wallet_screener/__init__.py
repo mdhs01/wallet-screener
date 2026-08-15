@@ -14,6 +14,7 @@ from .lifecycle import LifecycleResult, WalletLifecycle
 from .live_contract import ContractCheck, LiveContractReport, LiveContractValidator
 from .live_validation import LiveValidationReport, ValidationCheck, validate_gmgn_provider
 from .live_validation_run import LiveValidationRun, LiveValidationRunner
+from .live_paper_session import LivePaperSession, PaperSessionReport
 from .market_feed import FeedCycleReport, InMemoryMarketSource, LiveMarketFeed, MarketSnapshotSource
 from .market_observation import MarketObservationAdapter, MarketSnapshot
 from .manual_qa import ManualQAReport, build_manual_qa_report
@@ -51,7 +52,7 @@ __all__ = [
     "FeedCycleReport", "InMemoryMarketSource", "MarketSnapshotSource",
     "ManualQAReport", "MarketObservationAdapter", "MarketSnapshot", "NormalizedWallet", "NullProvider",
     "JsonFormatter", "Observability", "RuntimeMetrics", "configure_logging",
-    "PaperObservation", "PaperObservationSource", "PaperObservationStore", "PaperRuntimeReport",
+    "LivePaperSession", "PaperSessionReport", "PaperObservation", "PaperObservationSource", "PaperObservationStore", "PaperRuntimeReport",
     "PaperTrackConfig", "PaperTrackSummary", "PaperTracker", "PersistentPaperRuntime", "PipelineReport",
     "ProviderConfig", "RevalidationSnapshot", "RetryPolicy", "RuntimeSettings", "SchemaError", "ScreeningPipeline",
     "ScreeningResult", "ScreeningStore", "ScreenerConfig", "ScheduledRuntime", "ScheduledUnifiedReport", "ScheduledUnifiedRuntime", "SchedulerReport", "SingletonLock",
