@@ -4,36 +4,57 @@ Wallet screening engine based on the uploaded GMGN Wallet Screening Framework.
 
 ## Current scope
 
-- Provider/API-agnostic architecture
+- Provider-agnostic architecture
 - No API keys required yet
 - Mock/in-memory provider for development and tests
-- Tunable layered screening pipeline
-- Explainable scores, warnings, and rejection reasons
-- Current-holdings conviction analysis
-- 15–20 trade behavior sample support
-- Profit distribution and daily profit-series analysis
-- Holding-time consistency and winner/loser behavior
-- 7D vs 30D divergence detection
-- Funding/cluster independence checks
-- Cross-token repeatability scoring
-- Style and public-crowding checks
-- Separate actionability score
+- Layered screening pipeline
+- Configurable thresholds
+- Explainable scoring, rejection reasons, warnings, and layer scores
+- Phase 3 automated preparation and gating for the required 15–20 trade manual review
 
 ## Screening flow
 
-Discovery → Surface Filter → Realized Performance → Profit Distribution → Holding Behavior → Risk/Phishing → Cross-Token → Funding/Cluster → 7D/30D Consistency → Conviction/Style → Actionability → Final Score
+Discovery → Surface Filter → Performance → Profit Distribution → Behavior → Risk → Cross-Token → Funding/Cluster → Manual Trade Sample → Manual Review → Paper Track → Watchlist
 
-The later stages for manual QA, 3–7 day paper tracking, watchlist persistence, and weekly revalidation will be implemented after the core deep screener is stable.
+## Phase 3: Manual Trade Verification
 
-## Phase 2
+Before a wallet can enter the final watchlist, the engine requests a trade sample of up to 20 trades and requires at least 15 by default.
 
-Phase 2 expands the engine around the framework's key principle: realized performance is necessary but not sufficient. The screener now treats distribution, behavior, current conviction, network independence, cross-token consistency, style match, crowding, and actionability as separate evidence.
+The automated QA layer checks:
 
-Thresholds remain configurable so the system can be tuned later without rewriting the screening engine.
+- launch time vs entry time and entry latency
+- entry size and liquidity-at-entry completeness
+- actionable-entry rate
+- transfer-in rate
+- repeated trade-behavior patterns
+- partial TP / residual hold / cut-loss / underwater accumulation evidence
+- whether the sample is sufficiently complete for human review
 
-## API strategy
+The engine does **not** claim that automated checks replace the manual review described by the source framework. By default, a passing automated sample produces `manual_review_required` rather than `final_watchlist`.
 
-External API integration is intentionally deferred. Provider interfaces are the boundary for GMGN, Solana RPC, Solscan/Etherscan, or future data sources. The screening engine must remain usable with fixture/mock data before real API credentials are added.
+## Configuration
+
+Phase 3 thresholds are configurable through `ScreenerConfig.manual_qa` and `ScreenerConfig.actionability`.
+
+Important defaults:
+
+- minimum manual sample: 15 trades
+- maximum sample: 20 trades
+- minimum actionable rate: 50%
+- maximum transfer-in rate: 20%
+- minimum complete trade-data rate: 90%
+- minimum repeated-behavior rate: 50%
+- manual review gate: enabled
+
+These are implementation defaults, not claims that the source framework specifies identical numeric thresholds for every manual-QA metric.
+
+## Status
+
+Phase 0–2: foundation, schemas, configuration, provider interfaces, analytics, and layered screening.
+
+Phase 3: manual trade sample verification engine and watchlist gate implemented.
+
+External API integration is intentionally deferred until the engine is complete and testable.
 
 ## Run
 
