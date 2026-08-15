@@ -27,6 +27,7 @@ from .scheduler import ScheduledRuntime, SchedulerReport, SingletonLock
 from .solana_rpc import SolanaRpcClient
 from .solscan_adapter import SolscanAdapter
 from .screener import WalletScreener
+from .unified_runtime import UnifiedRuntimeJob, UnifiedRuntimeReport
 from .watchlist import (
     RevalidationSnapshot,
     WatchlistCategory,
@@ -41,14 +42,15 @@ __all__ = [
     "CircuitBreaker", "ClusterReport", "CrossTokenEvidence", "FundingAwareProvider",
     "FundingObservation", "FundingVerifier", "GMGNAdapter", "GMGNLiveProvider",
     "GMGNRoute", "GmgnCli", "GmgnCliConfig", "GmgnCliError", "GmgnEndpointMap",
-    "HealthReport", "LifecycleResult", "WalletLifecycle", "LiveValidationReport", "ValidationCheck",
-    "FeedCycleReport", "InMemoryMarketSource", "LiveMarketFeed", "MarketSnapshotSource",
+    "HealthReport", "LifecycleResult", "WalletLifecycle", "LiveMarketFeed", "LiveValidationReport", "ValidationCheck",
+    "FeedCycleReport", "InMemoryMarketSource", "MarketSnapshotSource",
     "ManualQAReport", "MarketObservationAdapter", "MarketSnapshot", "NormalizedWallet", "NullProvider",
     "PaperObservation", "PaperObservationSource", "PaperObservationStore", "PaperRuntimeReport",
     "PaperTrackConfig", "PaperTrackSummary", "PaperTracker", "PersistentPaperRuntime", "PipelineReport",
     "ProviderConfig", "RevalidationSnapshot", "RetryPolicy", "SchemaError", "ScreeningPipeline",
     "ScreeningResult", "ScreeningStore", "ScreenerConfig", "ScheduledRuntime", "SchedulerReport", "SingletonLock",
-    "SolanaRpcClient", "SolscanAdapter", "TradeObservation", "WalletDataProvider", "WalletLink", "WalletMetrics", "WalletScreener",
+    "SolanaRpcClient", "SolscanAdapter", "TradeObservation", "UnifiedRuntimeJob", "UnifiedRuntimeReport",
+    "WalletDataProvider", "WalletLink", "WalletMetrics", "WalletScreener",
     "WatchlistCategory", "WatchlistEntry", "WatchlistManager", "WatchlistStatus", "analyze_cluster",
     "build_manual_qa_report", "check_health", "classify_category", "route_table", "validate_gmgn_provider",
     "with_retry",
