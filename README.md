@@ -25,10 +25,26 @@ Wallet screening engine based on the uploaded GMGN Wallet Screening Framework.
 - Phase 17 bounded live-market orchestration
 - Phase 18 scheduled runtime with singleton protection, graceful stop, and optional circuit-breaker integration
 - Phase 19 unified one-cycle runtime joining screening, market feed, persistence, and lifecycle
+- Phase 21 runtime CLI shell with explicit once/scheduled/validate/health commands
 
 ## Screening flow
 
 Discovery → Surface Filter → Performance → Profit Distribution → Behavior → Risk → Cross-Token → Funding/Cluster → Manual Trade Sample → Manual Review → Paper Track → Watchlist
+
+## Phase 21: Runtime CLI
+
+`cli.py` provides a small operational entrypoint with four explicit modes:
+
+```bash
+python -m src.wallet_screener.cli health --db data/wallet_screener.db
+python -m src.wallet_screener.cli validate --db data/wallet_screener.db
+python -m src.wallet_screener.cli once --db data/wallet_screener.db --max-candidates 50
+python -m src.wallet_screener.cli scheduled --db data/wallet_screener.db --interval 300 --cycles 10
+```
+
+The CLI intentionally does not accept API keys or other secrets as command-line arguments. Provider construction and credentials remain configuration/runtime concerns.
+
+The current CLI is the deployment shell; it reports readiness for `once` and `scheduled` until a concrete provider/runtime configuration is bound. This prevents accidentally presenting a fake live execution path before real credentials and market contracts are verified.
 
 ## Phase 19: Unified Runtime Job
 
@@ -49,8 +65,6 @@ The job returns a single `UnifiedRuntimeReport` containing screening counts, mar
 Lifecycle evaluation occurs from the screening result before the current cycle's market observations are ingested, preventing the newly collected market observation from changing the decision that produced the candidate in the same cycle.
 
 The runtime does not place trades, sign transactions, or invent market observations.
-
-See `docs/PHASE19_UNIFIED_RUNTIME.md`.
 
 ## Phase 18: Scheduler & Continuous Runtime
 
