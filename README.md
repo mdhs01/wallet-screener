@@ -18,21 +18,31 @@ Wallet screening engine based on the uploaded GMGN Wallet Screening Framework.
 - Phase 9 conservative funding-source and wallet-cluster verification
 - Phase 10 unified wallet lifecycle connecting screening, paper tracking, and watchlist promotion
 - Phase 11 operational resilience and health checks
+- Phase 12 read-only live validation for the configured GMGN runtime
 
 ## Screening flow
 
 Discovery → Surface Filter → Performance → Profit Distribution → Behavior → Risk → Cross-Token → Funding/Cluster → Manual Trade Sample → Manual Review → Paper Track → Watchlist
 
+## Phase 12: Live Validation
+
+`live_validation.py` provides a read-only runtime validation report. It checks:
+
+- provider capabilities
+- live candidate discovery
+- wallet metrics
+- current holdings
+- recent activity
+
+The validator only reports `ready=true` after at least one wallet is returned and all required checks pass. Empty discovery is not treated as a successful live test.
+
+Run this validation only in an environment where the configured `gmgn-cli` and credentials are available. No credentials are stored in the repository and no trading operation is performed.
+
+See `docs/PHASE12_LIVE_VALIDATION.md`.
+
 ## Phase 11: Production Hardening
 
-Operational helpers now provide:
-
-- retry with exponential backoff
-- circuit-breaker state for repeatedly failing dependencies
-- filesystem/database health checks
-- explicit degraded status when API credentials/endpoints are not configured
-
-These helpers are deliberately small and provider-agnostic so they can be applied around the runtime without changing screening semantics. API credentials remain outside source control.
+Operational helpers provide retry with exponential backoff, circuit-breaker state for repeatedly failing dependencies, filesystem/database health checks, and explicit degraded status when API credentials/endpoints are not configured.
 
 ## Phase 10: Unified Wallet Lifecycle
 
@@ -50,19 +60,11 @@ watchlist decision
 ACTIVE / REVIEW / DROPPED
 ```
 
-The lifecycle does not invent paper observations. Real observations must be added by the market-data/runtime layer. Until the paper gate is satisfied, a wallet remains `review` even when the historical screening score is high. This preserves the framework's separation between historical edge and actionability validation.
+The lifecycle does not invent paper observations. Real observations must be added by the market-data/runtime layer. Until the paper gate is satisfied, a wallet remains `review` even when the historical screening score is high.
 
 ## Phase 9: Funding & Cluster Verification
 
-The funding layer verifies evidence that can make multiple wallets non-independent signals. It uses Solana JSON-RPC transaction history and a normalized evidence model.
-
-Components:
-
-- `cluster_analysis.py`: shared-funder, linked-wallet, synchronized-funding and independence calculations.
-- `funding_verifier.py`: collects native balance-transfer evidence using `getSignaturesForAddress` and `getTransaction`.
-- `cluster_provider.py`: decorates an existing wallet provider with funding/cluster evidence.
-
-The implementation is intentionally conservative: missing data is not treated as clean evidence, and common ownership is not asserted solely from similar trading behavior.
+The funding layer verifies evidence that can make multiple wallets non-independent signals. It uses Solana JSON-RPC transaction history and a normalized evidence model. The implementation is conservative: missing data is not treated as clean evidence, and common ownership is not asserted solely from similar trading behavior.
 
 ## Phase 7: Verified GMGN Mapping
 
@@ -73,8 +75,6 @@ The live integration uses the official `gmgn-cli` interface rather than scraping
 - `portfolio activity`
 - `track smartmoney`
 - `market trending`
-
-The project records the documented GMGN OpenAPI route paths and rate-limit weights in `gmgn_openapi_contract.py`.
 
 `GMGNLiveProvider` maps documented portfolio stats, holdings and activity into the internal screening models and deduplicates wallet candidates from Smart Money activity.
 
