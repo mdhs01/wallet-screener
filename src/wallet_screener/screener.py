@@ -9,11 +9,7 @@ from .providers import WalletDataProvider
 
 
 class WalletScreener:
-    """Deterministic, API-agnostic wallet screening engine.
-
-    Provider/API code is deliberately kept outside this class so thresholds and
-    screening logic can be tuned without changing data acquisition.
-    """
+    """Deterministic, API-agnostic wallet screening engine."""
 
     def __init__(self, provider: WalletDataProvider, config: ScreenerConfig | None = None) -> None:
         self.provider = provider
@@ -23,19 +19,17 @@ class WalletScreener:
         raw = self.provider.get_wallet_metrics(address)
         metrics = WalletMetrics(**{k: v for k, v in raw.items() if k in WalletMetrics.__dataclass_fields__})
         metrics.address = address
-
         warnings: list[str] = []
         reasons: list[str] = []
         failed: list[str] = []
         layer_scores: dict[str, float] = {}
 
-        # Layers 10–11 — current holdings and manual trade sample inputs.
         holdings = [HoldingSnapshot(**{k: v for k, v in h.items() if k in HoldingSnapshot.__dataclass_fields__}) for h in self.provider.get_current_holdings(address)]
         trades = [TradeObservation(**{k: v for k, v in t.items() if k in TradeObservation.__dataclass_fields__}) for t in self.provider.get_trade_sample(address, limit=20)]
         metrics = calculate_derived_metrics(metrics, trades)
         self._apply_holdings(metrics, holdings)
 
-        # Layer 2 — Surface filter.
+        # 01–02 Discovery is provider-owned; this engine starts at Surface Filter.
         if metrics.win_rate_7d < self.config.surface.min_win_rate_7d:
             failed.append("win_rate_7d_below_min")
         if metrics.win_rate_30d < self.config.surface.min_win_rate_30d:
@@ -60,22 +54,20 @@ class WalletScreener:
             failed.append("single_token_profit_dependency")
         if metrics.win_rate_7d >= self.config.surface.max_win_rate_for_investigation or metrics.win_rate_30d >= self.config.surface.max_win_rate_for_investigation:
             warnings.append("extreme_win_rate_requires_investigation")
-
         if failed:
             return ScreeningResult(address, False, "surface_filter", 0.0, reasons, failed, warnings, metrics, layer_scores)
-
         layer_scores["surface"] = 1.0
 
-        # Layers 3–5 — realized performance and profit distribution.
+        # 03–05 Performance and profit distribution.
         if metrics.unrealized_to_realized_ratio > 10:
             warnings.append("unrealized_pnl_dominant")
         else:
             reasons.append("realized_performance_healthy")
-
         distribution = distribution_score(metrics)
         layer_scores["profit_distribution"] = distribution
-        lottery_share = metrics.profit_buckets.get(">5x", 0) / max(sum(metrics.profit_buckets.values()), 1)
-        small_medium = (metrics.profit_buckets.get("0–2x", 0) + metrics.profit_buckets.get("2–5x", 0)) / max(sum(metrics.profit_buckets.values()), 1)
+        total_buckets = max(sum(metrics.profit_buckets.values()), 1)
+        lottery_share = metrics.profit_buckets.get(">5x", 0) / total_buckets
+        small_medium = (metrics.profit_buckets.get("0–2x", 0) + metrics.profit_buckets.get("2–5x", 0)) / total_buckets
         if lottery_share > self.config.distribution.max_lottery_share:
             warnings.append("lottery_dependency")
         if small_medium >= self.config.distribution.min_small_medium_win_share:
@@ -85,10 +77,10 @@ class WalletScreener:
         if metrics.daily_profit_series:
             if metrics.recent_profit_stability < self.config.distribution.min_recent_profit_stability:
                 warnings.append("daily_profit_series_unstable")
-            if metrics.recent_profit_stability >= self.config.distribution.min_recent_profit_stability:
+            else:
                 reasons.append("daily_profit_series_has_repeatability")
 
-        # Layers 6–7 — transaction frequency and holding behavior.
+        # 06–07 Frequency and holding behavior.
         transfer_ratio = metrics.transfer_in_count / max(metrics.trade_count_30d, 1)
         fast_ratio = metrics.buy_sell_under_10s / max(metrics.trade_count_30d, 1)
         if transfer_ratio > self.config.risk.max_transfer_in_ratio:
@@ -97,16 +89,15 @@ class WalletScreener:
             failed.append("ultra_short_trade_ratio_too_high")
         if metrics.hold_consistency < self.config.behavior.min_hold_consistency:
             failed.append("holding_behavior_inconsistent")
-        if metrics.winner_longer_than_loser_rate < self.config.behavior.min_winner_longer_than_loser_rate:
+        if metrics.winner_longer_than_loser_rate < self.config.behavior.min_winner_longer_than_loser_rate and trades:
             warnings.append("winner_loser_holding_relationship_weak")
         if metrics.bag_zero_count > max(1, int(metrics.trade_count_30d * self.config.behavior.max_bag_zero_ratio)):
             warnings.append("bag_zero_ratio_high")
         if metrics.style_change_score > self.config.behavior.max_style_change_score:
             warnings.append("style_change_detected")
-
         layer_scores["holding_behavior"] = max(0.0, min(1.0, metrics.hold_consistency))
 
-        # Layers 12–13 — transfer-in and risk/phishing behavior.
+        # 08–13 Risk, transfer-in and network behavior.
         if metrics.blacklist_count > self.config.risk.max_blacklist_count:
             failed.append("blacklist_risk")
         if metrics.honeypot_count > self.config.risk.max_honeypot_count:
@@ -124,7 +115,7 @@ class WalletScreener:
         if metrics.sold_more_than_bought > 0:
             warnings.append("sold_more_than_bought_present")
 
-        # Layers 14–15 — cross-token consistency and actionable early entry.
+        # 14–15 Cross-token and entry timing.
         cross = self.provider.get_cross_token_evidence(address)
         cross_score = cross.score
         layer_scores["cross_token"] = cross_score
@@ -135,7 +126,7 @@ class WalletScreener:
         if metrics.early_actionable_rate < self.config.consistency.min_early_actionable_rate:
             failed.append("entry_not_actionable_enough")
 
-        # Layers 16–17 — funding / cluster independence.
+        # 16–17 Funding / cluster independence.
         funding = self.provider.get_funding_cluster(address)
         metrics.common_funder_count = int(funding.get("common_funder_count", metrics.common_funder_count))
         metrics.cluster_size = int(funding.get("cluster_size", metrics.cluster_size))
@@ -143,7 +134,7 @@ class WalletScreener:
         if metrics.independence_score < self.config.consistency.min_independence_score:
             failed.append("funding_independence_weak")
 
-        # Layer 18 — 7D vs 30D divergence.
+        # 18–22 Recency, daily series, conviction, size and style.
         divergence = divergence_label(metrics)
         if divergence == "hot_streak":
             warnings.append("7d_hot_streak_vs_30d")
@@ -152,8 +143,6 @@ class WalletScreener:
         elif divergence == "strong_consistency":
             reasons.append("7d_30d_consistency_strong")
         layer_scores["recency_consistency"] = {"strong_consistency": 1.0, "mixed": 0.5, "hot_streak": 0.35, "decaying": 0.25}[divergence]
-
-        # Layers 19–22 — daily series, underwater conviction, size and style.
         if metrics.underwater_recovery_rate >= self.config.behavior.min_underwater_recovery_rate:
             reasons.append("underwater_recovery_behavior_supported")
         if metrics.current_conviction < self.config.consistency.min_current_conviction:
@@ -165,21 +154,15 @@ class WalletScreener:
         if metrics.crowding_score > self.config.actionability.max_crowding_score:
             failed.append("public_crowding_too_high")
 
-        # Actionability is deliberately a separate metric.
+        # 23–25 Actionability and final composite.
         actionability = actionability_score(metrics)
         layer_scores["actionability"] = actionability
         if actionability < self.config.actionability.min_actionability_score:
             failed.append("actionability_score_too_low")
-
-        # Layers 23–25 — final composite and classification.
         score = self._score(metrics, distribution, cross_score, transfer_ratio, fast_ratio, actionability)
         passed = not failed and score >= self.config.min_final_score
         stage = "final_watchlist" if passed else "deep_review"
-        if passed:
-            reasons.append("repeatable_edge_candidate")
-        else:
-            reasons.append("requires_manual_or_further_review")
-
+        reasons.append("repeatable_edge_candidate" if passed else "requires_manual_or_further_review")
         return ScreeningResult(address, passed, stage, score, reasons, failed, warnings, metrics, layer_scores)
 
     @staticmethod
@@ -190,7 +173,7 @@ class WalletScreener:
         current_winner = sum(max(h.current_value, 0.0) for h in holdings if h.unrealized_pnl > 0)
         current_total = sum(max(h.current_value, 0.0) for h in holdings)
         if total_original > 0:
-            metrics.current_conviction = max(metrics.current_conviction, min(1.0, current_total / total_original))
+            metrics.current_conviction = min(1.0, current_total / total_original)
         if current_total > 0:
             metrics.current_winner_exposure = current_winner / current_total
         metrics.bag_zero_count = max(metrics.bag_zero_count, sum(1 for h in holdings if h.is_zero_value))
@@ -217,7 +200,6 @@ class WalletScreener:
         conviction = clamp(m.current_conviction)
         funding = clamp(m.independence_score * (1.0 - min(1.0, transfer_ratio + fast_ratio)))
         style = clamp(m.style_match_score)
-
         return 10 * (
             realized * s.realized_performance_weight
             + pnl_ratio * s.pnl_ratio_weight
