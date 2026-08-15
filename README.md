@@ -32,10 +32,19 @@ Wallet screening engine based on the uploaded GMGN Wallet Screening Framework.
 - Phase 25 CI quality gate
 - Phase 26 read-only live provider contract validation boundary
 - Phase 27 auditable read-only live validation runner
+- Phase 28 persistent live paper-session management and 3–7 day readiness tracking
 
 ## Screening flow
 
 Discovery → Surface Filter → Performance → Profit Distribution → Behavior → Risk → Cross-Token → Funding/Cluster → Manual Trade Sample → Manual Review → Paper Track → Watchlist
+
+## Phase 28: Live 3–7 Day Paper Tracking
+
+`live_paper_session.py` provides `LivePaperSession` for a persistent read-only paper validation window. Observations are ingested through the existing idempotent paper runtime and stored in SQLite, so repeated polling/restarts do not inflate the sample.
+
+The session also reports the age of the oldest persisted observation and whether the framework's 3-day minimum window or 7-day maximum window has been reached. The session manager does not invent observations and does not perform trading or signing operations.
+
+A session being structurally ready is **not** the same as the wallet strategy passing the paper-performance gate. The existing `PaperTracker` remains responsible for actionable rate, false signals, missed signals, expectancy, drawdown, and related readiness metrics.
 
 ## Phase 27: Actual Live Read-Only Validation Run
 
@@ -44,8 +53,6 @@ Discovery → Surface Filter → Performance → Profit Distribution → Behavio
 The runner is deliberately provider- and environment-neutral: the caller supplies the concrete read-only checks. This lets deployment bind the verified GMGN CLI/runtime without embedding secrets or network assumptions into the screening engine.
 
 **Important:** implementation of the runner is not the same as a successful live validation. Phase 27 becomes **LIVE VERIFIED** only after the runner is executed in a real environment with the required GMGN runtime/credentials and every required check passes.
-
-See `docs/PHASE27_LIVE_VALIDATION_RUN.md`.
 
 ## Phase 26: Live Contract Validation
 
