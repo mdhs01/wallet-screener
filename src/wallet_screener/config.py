@@ -78,6 +78,18 @@ class ManualQAConfig:
 
 
 @dataclass(slots=True)
+class PaperTrackConfig:
+    min_days: int = 3
+    max_days: int = 7
+    min_observations: int = 10
+    min_actionable_rate: float = 0.50
+    max_false_signal_rate: float = 0.40
+    max_missed_rate: float = 0.50
+    min_positive_expectancy_pct: float = 0.0
+    max_drawdown_pct: float = 30.0
+
+
+@dataclass(slots=True)
 class ScoreConfig:
     realized_performance_weight: float = 0.15
     pnl_ratio_weight: float = 0.10
@@ -103,6 +115,7 @@ class ScreenerConfig:
     consistency: ConsistencyConfig = field(default_factory=ConsistencyConfig)
     actionability: ActionabilityConfig = field(default_factory=ActionabilityConfig)
     manual_qa: ManualQAConfig = field(default_factory=ManualQAConfig)
+    paper_track: PaperTrackConfig = field(default_factory=PaperTrackConfig)
     score: ScoreConfig = field(default_factory=ScoreConfig)
     min_final_score: float = 7.0
     max_watchlist_size: int = 15
