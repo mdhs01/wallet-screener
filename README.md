@@ -28,10 +28,19 @@ Wallet screening engine based on the uploaded GMGN Wallet Screening Framework.
 - Phase 21 runtime CLI shell with explicit once/scheduled/validate/health commands
 - Phase 22 unified environment/runtime configuration with validation
 - Phase 23 structured observability and runtime metrics
+- Phase 24 deterministic full-runtime integration coverage
 
 ## Screening flow
 
 Discovery → Surface Filter → Performance → Profit Distribution → Behavior → Risk → Cross-Token → Funding/Cluster → Manual Trade Sample → Manual Review → Paper Track → Watchlist
+
+## Phase 24: Full Integration Testing
+
+Phase 24 connects Phase 23 observability directly to `UnifiedRuntimeJob` and adds deterministic integration coverage for the complete read-only runtime boundary.
+
+The integration test exercises screening persistence, lifecycle invocation, market snapshot normalization, persistent paper observations, duplicate/idempotency protection, and runtime/market observability counters in one assembled runtime.
+
+The test deliberately uses `NullProvider` and `InMemoryMarketSource`; it requires no API key, network access, wallet signing, or live trading. Live GMGN remains a separate read-only contract/validation boundary rather than a dependency of deterministic CI.
 
 ## Phase 23: Observability & Monitoring
 
