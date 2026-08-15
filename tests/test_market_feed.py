@@ -12,21 +12,24 @@ def _runtime(tmp_path):
     return PersistentPaperRuntime(paper_store, PaperTracker())
 
 
-def test_feed_accepts_snapshot_and_deduplicates(tmp_path):
-    snapshot = MarketSnapshot(
+def _snapshot() -> MarketSnapshot:
+    return MarketSnapshot(
         wallet="wallet-1",
         token="token-1",
         signal_ts=100,
-        price_usd=1.0,
+        market_price_usd=1.0,
         liquidity_usd=10000,
-        hypothetical_entry_ts=101,
-        hypothetical_entry_price=1.0,
-        hypothetical_exit_ts=110,
-        hypothetical_exit_price=1.1,
+        wallet_entry_ts=101,
+        wallet_entry_price_usd=1.0,
+        wallet_exit_ts=110,
+        wallet_exit_price_usd=1.1,
         actionable=True,
     )
+
+
+def test_feed_accepts_snapshot_and_deduplicates(tmp_path):
     runtime = _runtime(tmp_path)
-    feed = LiveMarketFeed(InMemoryMarketSource([snapshot]), runtime)
+    feed = LiveMarketFeed(InMemoryMarketSource([_snapshot()]), runtime)
 
     first = feed.cycle()
     second = feed.cycle()
@@ -40,7 +43,7 @@ def test_feed_rejects_invalid_snapshot(tmp_path):
         wallet="wallet-1",
         token="token-1",
         signal_ts=100,
-        price_usd=0.0,
+        market_price_usd=0.0,
         liquidity_usd=10000,
     )
     runtime = _runtime(tmp_path)
@@ -50,20 +53,8 @@ def test_feed_rejects_invalid_snapshot(tmp_path):
 
 
 def test_polling_cycles(tmp_path):
-    snapshot = MarketSnapshot(
-        wallet="wallet-1",
-        token="token-1",
-        signal_ts=100,
-        price_usd=1.0,
-        liquidity_usd=10000,
-        hypothetical_entry_ts=101,
-        hypothetical_entry_price=1.0,
-        hypothetical_exit_ts=110,
-        hypothetical_exit_price=1.1,
-        actionable=True,
-    )
     runtime = _runtime(tmp_path)
-    feed = LiveMarketFeed(InMemoryMarketSource([snapshot]), runtime)
+    feed = LiveMarketFeed(InMemoryMarketSource([_snapshot()]), runtime)
     reports = feed.run_polling(interval_seconds=0.001, cycles=2)
     assert len(reports) == 2
     assert reports[0].accepted == 1
