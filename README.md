@@ -19,10 +19,21 @@ Wallet screening engine based on the uploaded GMGN Wallet Screening Framework.
 - Phase 10 unified wallet lifecycle connecting screening, paper tracking, and watchlist promotion
 - Phase 11 operational resilience and health checks
 - Phase 12 read-only live validation for the configured GMGN runtime
+- Phase 13 persistent, idempotent paper-tracking runtime
 
 ## Screening flow
 
 Discovery → Surface Filter → Performance → Profit Distribution → Behavior → Risk → Cross-Token → Funding/Cluster → Manual Trade Sample → Manual Review → Paper Track → Watchlist
+
+## Phase 13: Persistent Live Paper Tracking
+
+`paper_persistence.py` stores every paper observation in SQLite with a deterministic unique key. Duplicate observations are ignored, so repeated polling/restarts do not inflate the sample.
+
+`paper_runtime.py` provides a read-only `PersistentPaperRuntime` that accepts observations from a market-data source, persists them, and feeds newly inserted observations into the wallet lifecycle.
+
+The lifecycle now reloads persisted paper observations when evaluating a wallet. A process restart therefore does not reset the 3–7 day evidence window.
+
+This phase does not invent market observations, place orders, or perform live trading. A real market-data source must supply `PaperObservation` records.
 
 ## Phase 12: Live Validation
 
