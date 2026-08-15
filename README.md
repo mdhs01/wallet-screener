@@ -20,10 +20,36 @@ Wallet screening engine based on the uploaded GMGN Wallet Screening Framework.
 - Phase 11 operational resilience and health checks
 - Phase 12 read-only live validation for the configured GMGN runtime
 - Phase 13 persistent, idempotent paper-tracking runtime
+- Phase 14 market snapshot → paper-observation normalization
+- Phase 15 read-only market feed polling with duplicate protection
 
 ## Screening flow
 
 Discovery → Surface Filter → Performance → Profit Distribution → Behavior → Risk → Cross-Token → Funding/Cluster → Manual Trade Sample → Manual Review → Paper Track → Watchlist
+
+## Phase 15: Market Feed
+
+`market_feed.py` provides a source-agnostic polling layer:
+
+```text
+MarketSnapshotSource
+      ↓
+MarketObservationAdapter
+      ↓
+PersistentPaperRuntime
+      ↓
+SQLite
+```
+
+`LiveMarketFeed.cycle()` performs one read-only ingestion cycle. `run_polling()` repeats cycles at a configurable interval.
+
+Each cycle reports fetched, accepted, duplicate, rejected, and source-error counts. Duplicate observations are left to the persistent paper store's deterministic idempotency guard.
+
+The repository currently includes `InMemoryMarketSource` for deterministic integration tests. A GMGN-specific market source is intentionally not hard-coded until its exact supported market contract is verified.
+
+No trade execution, wallet signing, or order placement occurs in this phase.
+
+See `docs/PHASE15_MARKET_FEED.md`.
 
 ## Phase 13: Persistent Live Paper Tracking
 
@@ -33,17 +59,11 @@ Discovery → Surface Filter → Performance → Profit Distribution → Behavio
 
 The lifecycle now reloads persisted paper observations when evaluating a wallet. A process restart therefore does not reset the 3–7 day evidence window.
 
-This phase does not invent market observations, place orders, or perform live trading. A real market-data source must supply `PaperObservation` records.
+This phase does not invent market observations, place orders, or perform live trading.
 
 ## Phase 12: Live Validation
 
-`live_validation.py` provides a read-only runtime validation report. It checks:
-
-- provider capabilities
-- live candidate discovery
-- wallet metrics
-- current holdings
-- recent activity
+`live_validation.py` provides a read-only runtime validation report. It checks provider capabilities, live candidate discovery, wallet metrics, current holdings, and recent activity.
 
 The validator only reports `ready=true` after at least one wallet is returned and all required checks pass. Empty discovery is not treated as a successful live test.
 
@@ -57,21 +77,7 @@ Operational helpers provide retry with exponential backoff, circuit-breaker stat
 
 ## Phase 10: Unified Wallet Lifecycle
 
-`WalletLifecycle` connects the existing screening result, paper-tracking state, and dynamic watchlist.
-
-A wallet can be evaluated through one lifecycle call:
-
-```text
-screening result
-    ↓
-paper tracking readiness
-    ↓
-watchlist decision
-    ↓
-ACTIVE / REVIEW / DROPPED
-```
-
-The lifecycle does not invent paper observations. Real observations must be added by the market-data/runtime layer. Until the paper gate is satisfied, a wallet remains `review` even when the historical screening score is high.
+`WalletLifecycle` connects the existing screening result, paper-tracking state, and dynamic watchlist. Until the paper gate is satisfied, a wallet remains `review` even when the historical screening score is high.
 
 ## Phase 9: Funding & Cluster Verification
 
