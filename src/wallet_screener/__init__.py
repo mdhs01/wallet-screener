@@ -23,6 +23,7 @@ from .paper_tracking import PaperObservation, PaperTrackSummary, PaperTracker
 from .persistence import ScreeningStore
 from .pipeline import PipelineReport, ScreeningPipeline
 from .providers import CrossTokenEvidence, NullProvider, WalletDataProvider
+from .scheduler import ScheduledRuntime, SchedulerReport, SingletonLock
 from .solana_rpc import SolanaRpcClient
 from .solscan_adapter import SolscanAdapter
 from .screener import WalletScreener
@@ -46,8 +47,8 @@ __all__ = [
     "PaperObservation", "PaperObservationSource", "PaperObservationStore", "PaperRuntimeReport",
     "PaperTrackConfig", "PaperTrackSummary", "PaperTracker", "PersistentPaperRuntime", "PipelineReport",
     "ProviderConfig", "RevalidationSnapshot", "RetryPolicy", "SchemaError", "ScreeningPipeline",
-    "ScreeningResult", "ScreeningStore", "ScreenerConfig", "SolanaRpcClient", "SolscanAdapter",
-    "TradeObservation", "WalletDataProvider", "WalletLink", "WalletMetrics", "WalletScreener",
+    "ScreeningResult", "ScreeningStore", "ScreenerConfig", "ScheduledRuntime", "SchedulerReport", "SingletonLock",
+    "SolanaRpcClient", "SolscanAdapter", "TradeObservation", "WalletDataProvider", "WalletLink", "WalletMetrics", "WalletScreener",
     "WatchlistCategory", "WatchlistEntry", "WatchlistManager", "WatchlistStatus", "analyze_cluster",
     "build_manual_qa_report", "check_health", "classify_category", "route_table", "validate_gmgn_provider",
     "with_retry",
