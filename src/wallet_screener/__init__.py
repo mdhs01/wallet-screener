@@ -17,6 +17,7 @@ from .market_observation import MarketObservationAdapter, MarketSnapshot
 from .manual_qa import ManualQAReport, build_manual_qa_report
 from .models import ScreeningResult, TradeObservation, WalletMetrics
 from .normalized import NormalizedWallet, SchemaError
+from .observability import JsonFormatter, Observability, RuntimeMetrics, configure_logging
 from .operational import CircuitBreaker, RetryPolicy, with_retry
 from .paper_persistence import PaperObservationStore
 from .paper_runtime import PaperObservationSource, PaperRuntimeReport, PersistentPaperRuntime
@@ -47,6 +48,7 @@ __all__ = [
     "HealthReport", "LifecycleResult", "LiveMarketFeed", "LiveValidationReport", "ValidationCheck",
     "FeedCycleReport", "InMemoryMarketSource", "MarketSnapshotSource",
     "ManualQAReport", "MarketObservationAdapter", "MarketSnapshot", "NormalizedWallet", "NullProvider",
+    "JsonFormatter", "Observability", "RuntimeMetrics", "configure_logging",
     "PaperObservation", "PaperObservationSource", "PaperObservationStore", "PaperRuntimeReport",
     "PaperTrackConfig", "PaperTrackSummary", "PaperTracker", "PersistentPaperRuntime", "PipelineReport",
     "ProviderConfig", "RevalidationSnapshot", "RetryPolicy", "RuntimeSettings", "SchemaError", "ScreeningPipeline",
