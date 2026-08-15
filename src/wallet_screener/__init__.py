@@ -11,6 +11,7 @@ from .gmgn_provider import GMGNLiveProvider
 from .health import HealthReport, check_health
 from .lifecycle import LifecycleResult, WalletLifecycle
 from .live_validation import LiveValidationReport, ValidationCheck, validate_gmgn_provider
+from .market_observation import MarketObservationAdapter, MarketSnapshot
 from .manual_qa import ManualQAReport, build_manual_qa_report
 from .models import ScreeningResult, TradeObservation, WalletMetrics
 from .normalized import NormalizedWallet, SchemaError
@@ -39,12 +40,13 @@ __all__ = [
     "FundingObservation", "FundingVerifier", "GMGNAdapter", "GMGNLiveProvider",
     "GMGNRoute", "GmgnCli", "GmgnCliConfig", "GmgnCliError", "GmgnEndpointMap",
     "HealthReport", "LifecycleResult", "WalletLifecycle", "LiveValidationReport", "ValidationCheck",
-    "ManualQAReport", "NormalizedWallet", "NullProvider", "PaperObservation", "PaperObservationSource",
-    "PaperObservationStore", "PaperRuntimeReport", "PaperTrackConfig", "PaperTrackSummary", "PaperTracker",
-    "PersistentPaperRuntime", "PipelineReport", "ProviderConfig", "RevalidationSnapshot",
-    "RetryPolicy", "SchemaError", "ScreeningPipeline", "ScreeningResult", "ScreeningStore",
-    "ScreenerConfig", "SolanaRpcClient", "SolscanAdapter", "TradeObservation", "WalletDataProvider",
-    "WalletLink", "WalletMetrics", "WalletScreener", "WatchlistCategory", "WatchlistEntry",
-    "WatchlistManager", "WatchlistStatus", "analyze_cluster", "build_manual_qa_report", "check_health",
-    "classify_category", "route_table", "validate_gmgn_provider", "with_retry",
+    "ManualQAReport", "MarketObservationAdapter", "MarketSnapshot", "NormalizedWallet", "NullProvider",
+    "PaperObservation", "PaperObservationSource", "PaperObservationStore", "PaperRuntimeReport",
+    "PaperTrackConfig", "PaperTrackSummary", "PaperTracker", "PersistentPaperRuntime", "PipelineReport",
+    "ProviderConfig", "RevalidationSnapshot", "RetryPolicy", "SchemaError", "ScreeningPipeline",
+    "ScreeningResult", "ScreeningStore", "ScreenerConfig", "SolanaRpcClient", "SolscanAdapter",
+    "TradeObservation", "WalletDataProvider", "WalletLink", "WalletMetrics", "WalletScreener",
+    "WatchlistCategory", "WatchlistEntry", "WatchlistManager", "WatchlistStatus", "analyze_cluster",
+    "build_manual_qa_report", "check_health", "classify_category", "route_table", "validate_gmgn_provider",
+    "with_retry",
 ]
