@@ -16,6 +16,7 @@ Wallet screening engine based on the uploaded GMGN Wallet Screening Framework.
 - Phase 7 verified GMGN data contract and official `gmgn-cli` live-data adapter
 - Phase 8 end-to-end orchestration and SQLite persistence
 - Phase 9 conservative funding-source and wallet-cluster verification
+- Phase 10 unified wallet lifecycle connecting screening, paper tracking, and watchlist promotion
 
 ## Screening flow
 
@@ -32,6 +33,24 @@ Components:
 - `cluster_provider.py`: decorates an existing wallet provider with funding/cluster evidence.
 
 The implementation is intentionally conservative: missing data is not treated as clean evidence, and common ownership is not asserted solely from similar trading behavior. See `docs/PHASE9_FUNDING_CLUSTER.md`.
+
+## Phase 10: Unified Wallet Lifecycle
+
+`WalletLifecycle` connects the existing screening result, paper-tracking state, and dynamic watchlist.
+
+A wallet can be evaluated through one lifecycle call:
+
+```text
+screening result
+    ↓
+paper tracking readiness
+    ↓
+watchlist decision
+    ↓
+ACTIVE / REVIEW / DROPPED
+```
+
+The lifecycle does not invent paper observations. Real observations must be added by the market-data/runtime layer. Until the paper gate is satisfied, a wallet remains `review` even when the historical screening score is high. This preserves the framework's separation between historical edge and actionability validation.
 
 ## Phase 7: Verified GMGN Mapping
 
