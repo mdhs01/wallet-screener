@@ -15,6 +15,8 @@ from .manual_qa import ManualQAReport, build_manual_qa_report
 from .models import ScreeningResult, TradeObservation, WalletMetrics
 from .normalized import NormalizedWallet, SchemaError
 from .operational import CircuitBreaker, RetryPolicy, with_retry
+from .paper_persistence import PaperObservationStore
+from .paper_runtime import PaperObservationSource, PaperRuntimeReport, PersistentPaperRuntime
 from .paper_tracking import PaperObservation, PaperTrackSummary, PaperTracker
 from .persistence import ScreeningStore
 from .pipeline import PipelineReport, ScreeningPipeline
@@ -37,8 +39,9 @@ __all__ = [
     "FundingObservation", "FundingVerifier", "GMGNAdapter", "GMGNLiveProvider",
     "GMGNRoute", "GmgnCli", "GmgnCliConfig", "GmgnCliError", "GmgnEndpointMap",
     "HealthReport", "LifecycleResult", "WalletLifecycle", "LiveValidationReport", "ValidationCheck",
-    "ManualQAReport", "NormalizedWallet", "NullProvider", "PaperObservation", "PaperTrackConfig",
-    "PaperTrackSummary", "PaperTracker", "PipelineReport", "ProviderConfig", "RevalidationSnapshot",
+    "ManualQAReport", "NormalizedWallet", "NullProvider", "PaperObservation", "PaperObservationSource",
+    "PaperObservationStore", "PaperRuntimeReport", "PaperTrackConfig", "PaperTrackSummary", "PaperTracker",
+    "PersistentPaperRuntime", "PipelineReport", "ProviderConfig", "RevalidationSnapshot",
     "RetryPolicy", "SchemaError", "ScreeningPipeline", "ScreeningResult", "ScreeningStore",
     "ScreenerConfig", "SolanaRpcClient", "SolscanAdapter", "TradeObservation", "WalletDataProvider",
     "WalletLink", "WalletMetrics", "WalletScreener", "WatchlistCategory", "WatchlistEntry",
