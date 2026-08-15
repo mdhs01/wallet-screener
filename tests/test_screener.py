@@ -1,12 +1,10 @@
-import pytest
-
 from src.wallet_screener import ScreenerConfig, WalletScreener
 from src.wallet_screener.models import WalletMetrics
 from src.wallet_screener.providers import CrossTokenEvidence, WalletDataProvider
 
 
 class FixtureProvider(WalletDataProvider):
-    def __init__(self, metrics: WalletMetrics, cross: CrossTokenEvidence | None = None):
+    def __init__(self, metrics: WalletMetrics, cross: CrossTokenEvidence | None = None, holdings=None, trades=None, funding=None):
         self.metrics = metrics
         self.cross = cross or CrossTokenEvidence(
             runner_tokens=["A", "B", "C", "D"],
@@ -15,6 +13,9 @@ class FixtureProvider(WalletDataProvider):
             shared_holdings_hits=3,
             earliest_bought_hits=3,
         )
+        self.holdings = holdings or []
+        self.trades = trades or []
+        self.funding = funding or {"common_funder_count": metrics.common_funder_count, "cluster_size": metrics.cluster_size}
 
     def discover_wallets(self):
         return [self.metrics.address]
@@ -24,16 +25,16 @@ class FixtureProvider(WalletDataProvider):
         return asdict(self.metrics)
 
     def get_current_holdings(self, address):
-        return []
+        return self.holdings
 
     def get_trade_sample(self, address, limit=20):
-        return []
+        return self.trades[:limit]
 
     def get_cross_token_evidence(self, address):
         return self.cross
 
     def get_funding_cluster(self, address):
-        return {"common_funder_count": self.metrics.common_funder_count, "cluster_size": self.metrics.cluster_size}
+        return self.funding
 
 
 def good_metrics():
@@ -69,9 +70,13 @@ def good_metrics():
         common_funder_count=0,
         cluster_size=1,
         profit_top_token_share=0.30,
+        profit_top_two_token_share=0.45,
         early_actionable_rate=0.75,
         current_conviction=0.75,
         crowding_score=0.0,
+        style_match_score=0.80,
+        daily_profit_series=[12, 9, 15, 11, 8, 13, 10],
+        recent_profit_stability=0.60,
     )
 
 
@@ -81,6 +86,8 @@ def test_good_wallet_passes_deep_pipeline():
     assert result.passed is True
     assert result.stage == "final_watchlist"
     assert result.score >= 7.0
+    assert "cross_token" in result.layer_scores
+    assert "actionability" in result.layer_scores
 
 
 def test_low_win_rate_is_rejected_at_surface():
@@ -100,3 +107,30 @@ def test_cluster_risk_is_rejected():
     result = screener.screen(metrics.address)
     assert result.passed is False
     assert "cluster_too_large" in result.failed_rules
+
+
+def test_lottery_dependency_is_warning_not_automatic_surface_rejection():
+    metrics = good_metrics()
+    metrics.profit_buckets = {"<-50%": 1, "-50%–0%": 1, "0–2x": 2, "2–5x": 1, ">5x": 10}
+    result = WalletScreener(FixtureProvider(metrics), ScreenerConfig()).screen(metrics.address)
+    assert "lottery_dependency" in result.warnings
+    assert result.stage in {"deep_review", "final_watchlist"}
+
+
+def test_current_holdings_can_reduce_conviction():
+    metrics = good_metrics()
+    holdings = [
+        {"token": "A", "current_value": 100, "original_value": 1000, "unrealized_pnl": -900},
+        {"token": "B", "current_value": 50, "original_value": 1000, "unrealized_pnl": -950},
+    ]
+    result = WalletScreener(FixtureProvider(metrics, holdings=holdings), ScreenerConfig()).screen(metrics.address)
+    assert result.metrics is not None
+    assert result.metrics.current_conviction < 0.30
+    assert "current_conviction_low" in result.failed_rules
+
+
+def test_style_change_is_a_warning():
+    metrics = good_metrics()
+    metrics.style_change_score = 0.90
+    result = WalletScreener(FixtureProvider(metrics), ScreenerConfig()).screen(metrics.address)
+    assert "style_change_detected" in result.warnings
