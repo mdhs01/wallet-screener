@@ -3,6 +3,7 @@ from .api_config import ApiConfig, ProviderConfig
 from .cluster_analysis import ClusterReport, FundingObservation, WalletLink, analyze_cluster
 from .cluster_provider import FundingAwareProvider
 from .config import PaperTrackConfig, ScreenerConfig
+from .configuration import ConfigurationError, RuntimeSettings
 from .funding_verifier import FundingVerifier
 from .gmgn_adapter import GMGNAdapter, GmgnEndpointMap
 from .gmgn_cli import GmgnCli, GmgnCliConfig, GmgnCliError
@@ -40,15 +41,15 @@ from .watchlist import (
 
 __all__ = [
     "ApiClient", "ApiConfig", "ApiError", "ApiResponse",
-    "CircuitBreaker", "ClusterReport", "CrossTokenEvidence", "FundingAwareProvider",
+    "CircuitBreaker", "ClusterReport", "ConfigurationError", "CrossTokenEvidence", "FundingAwareProvider",
     "FundingObservation", "FundingVerifier", "GMGNAdapter", "GMGNLiveProvider",
     "GMGNRoute", "GmgnCli", "GmgnCliConfig", "GmgnCliError", "GmgnEndpointMap",
-    "HealthReport", "LifecycleResult", "WalletLifecycle", "LiveMarketFeed", "LiveValidationReport", "ValidationCheck",
+    "HealthReport", "LifecycleResult", "LiveMarketFeed", "LiveValidationReport", "ValidationCheck",
     "FeedCycleReport", "InMemoryMarketSource", "MarketSnapshotSource",
     "ManualQAReport", "MarketObservationAdapter", "MarketSnapshot", "NormalizedWallet", "NullProvider",
     "PaperObservation", "PaperObservationSource", "PaperObservationStore", "PaperRuntimeReport",
     "PaperTrackConfig", "PaperTrackSummary", "PaperTracker", "PersistentPaperRuntime", "PipelineReport",
-    "ProviderConfig", "RevalidationSnapshot", "RetryPolicy", "SchemaError", "ScreeningPipeline",
+    "ProviderConfig", "RevalidationSnapshot", "RetryPolicy", "RuntimeSettings", "SchemaError", "ScreeningPipeline",
     "ScreeningResult", "ScreeningStore", "ScreenerConfig", "ScheduledRuntime", "ScheduledUnifiedReport", "ScheduledUnifiedRuntime", "SchedulerReport", "SingletonLock",
     "SolanaRpcClient", "SolscanAdapter", "TradeObservation", "UnifiedRuntimeJob", "UnifiedRuntimeReport",
     "WalletDataProvider", "WalletLink", "WalletMetrics", "WalletScreener",
