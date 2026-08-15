@@ -23,36 +23,40 @@ Wallet screening engine based on the uploaded GMGN Wallet Screening Framework.
 - Phase 14 market snapshot → paper-observation normalization
 - Phase 15 read-only market feed polling with duplicate protection
 - Phase 17 bounded live-market orchestration
+- Phase 18 scheduled runtime with singleton protection, graceful stop, and optional circuit-breaker integration
 
 ## Screening flow
 
 Discovery → Surface Filter → Performance → Profit Distribution → Behavior → Risk → Cross-Token → Funding/Cluster → Manual Trade Sample → Manual Review → Paper Track → Watchlist
 
+## Phase 18: Scheduler & Continuous Runtime
+
+`scheduler.py` provides `ScheduledRuntime` for controlled recurring execution of an existing read-only job.
+
+```text
+ScheduledRuntime
+      ↓
+read-only pipeline / market feed job
+      ↓
+screening + paper tracking + watchlist
+```
+
+The runtime provides:
+
+- configurable interval
+- bounded cycle mode for deterministic tests/deployments
+- singleton protection within the process
+- graceful stop with `stop()`
+- optional `CircuitBreaker` integration
+- cycle-level success/failure/skipped accounting
+
+The scheduler does not own screening semantics and does not place orders, sign transactions, or trade.
+
+See `docs/PHASE18_SCHEDULER.md`.
+
 ## Phase 17: Live Market Loop
 
 `market_loop.py` adds a bounded orchestration layer around `LiveMarketFeed`.
-
-```text
-Market Source
-      ↓
-LiveMarketFeed
-      ↓
-MarketObservationAdapter
-      ↓
-PersistentPaperRuntime
-      ↓
-SQLite
-```
-
-`LiveMarketLoop.run()` executes a configured number of read-only polling cycles and aggregates fetched, accepted, duplicate, rejected, and error counts.
-
-The loop is intentionally bounded so integration tests are deterministic and the repository does not silently create an unbounded background worker.
-
-A real GMGN source can be supplied through `LiveMarketFeed` after its exact upstream payload contract and credentials are verified. Until then, `InMemoryMarketSource` remains the deterministic test source.
-
-No trade execution, wallet signing, swap, or order placement occurs in Phase 17.
-
-See `docs/PHASE17_LIVE_MARKET_LOOP.md`.
 
 ## Phase 15: Market Feed
 
@@ -61,8 +65,6 @@ See `docs/PHASE17_LIVE_MARKET_LOOP.md`.
 ## Phase 13: Persistent Live Paper Tracking
 
 `paper_persistence.py` stores every paper observation in SQLite with a deterministic unique key. Duplicate observations are ignored, so repeated polling/restarts do not inflate the sample.
-
-`paper_runtime.py` provides a read-only `PersistentPaperRuntime` that accepts observations from a market-data source and persists newly inserted observations.
 
 ## Phase 12: Live Validation
 
