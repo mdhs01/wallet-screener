@@ -8,6 +8,7 @@ from .gmgn_adapter import GMGNAdapter, GmgnEndpointMap
 from .gmgn_cli import GmgnCli, GmgnCliConfig, GmgnCliError
 from .gmgn_openapi_contract import GMGNRoute, route_table
 from .gmgn_provider import GMGNLiveProvider
+from .lifecycle import LifecycleResult, WalletLifecycle
 from .manual_qa import ManualQAReport, build_manual_qa_report
 from .models import ScreeningResult, TradeObservation, WalletMetrics
 from .normalized import NormalizedWallet, SchemaError
@@ -32,12 +33,12 @@ __all__ = [
     "ClusterReport", "CrossTokenEvidence", "FundingAwareProvider",
     "FundingObservation", "FundingVerifier", "GMGNAdapter", "GMGNLiveProvider",
     "GMGNRoute", "GmgnCli", "GmgnCliConfig", "GmgnCliError", "GmgnEndpointMap",
-    "ManualQAReport", "NormalizedWallet", "NullProvider", "PaperObservation",
-    "PaperTrackConfig", "PaperTrackSummary", "PaperTracker", "PipelineReport",
-    "ProviderConfig", "RevalidationSnapshot", "SchemaError", "ScreeningPipeline",
-    "ScreeningResult", "ScreeningStore", "ScreenerConfig", "SolanaRpcClient",
-    "SolscanAdapter", "TradeObservation", "WalletDataProvider", "WalletLink",
-    "WalletMetrics", "WalletScreener", "WatchlistCategory", "WatchlistEntry",
-    "WatchlistManager", "WatchlistStatus", "analyze_cluster",
-    "build_manual_qa_report", "classify_category", "route_table",
+    "LifecycleResult", "WalletLifecycle", "ManualQAReport", "NormalizedWallet",
+    "NullProvider", "PaperObservation", "PaperTrackConfig", "PaperTrackSummary",
+    "PaperTracker", "PipelineReport", "ProviderConfig", "RevalidationSnapshot",
+    "SchemaError", "ScreeningPipeline", "ScreeningResult", "ScreeningStore",
+    "ScreenerConfig", "SolanaRpcClient", "SolscanAdapter", "TradeObservation",
+    "WalletDataProvider", "WalletLink", "WalletMetrics", "WalletScreener",
+    "WatchlistCategory", "WatchlistEntry", "WatchlistManager", "WatchlistStatus",
+    "analyze_cluster", "build_manual_qa_report", "classify_category", "route_table",
 ]
