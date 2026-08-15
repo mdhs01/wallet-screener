@@ -17,22 +17,22 @@ Wallet screening engine based on the uploaded GMGN Wallet Screening Framework.
 - Phase 8 end-to-end orchestration and SQLite persistence
 - Phase 9 conservative funding-source and wallet-cluster verification
 - Phase 10 unified wallet lifecycle connecting screening, paper tracking, and watchlist promotion
+- Phase 11 operational resilience and health checks
 
 ## Screening flow
 
 Discovery → Surface Filter → Performance → Profit Distribution → Behavior → Risk → Cross-Token → Funding/Cluster → Manual Trade Sample → Manual Review → Paper Track → Watchlist
 
-## Phase 9: Funding & Cluster Verification
+## Phase 11: Production Hardening
 
-The funding layer verifies evidence that can make multiple wallets non-independent signals. It uses Solana JSON-RPC transaction history and a normalized evidence model.
+Operational helpers now provide:
 
-Components:
+- retry with exponential backoff
+- circuit-breaker state for repeatedly failing dependencies
+- filesystem/database health checks
+- explicit degraded status when API credentials/endpoints are not configured
 
-- `cluster_analysis.py`: shared-funder, linked-wallet, synchronized-funding and independence calculations.
-- `funding_verifier.py`: collects native balance-transfer evidence using `getSignaturesForAddress` and `getTransaction`.
-- `cluster_provider.py`: decorates an existing wallet provider with funding/cluster evidence.
-
-The implementation is intentionally conservative: missing data is not treated as clean evidence, and common ownership is not asserted solely from similar trading behavior. See `docs/PHASE9_FUNDING_CLUSTER.md`.
+These helpers are deliberately small and provider-agnostic so they can be applied around the runtime without changing screening semantics. API credentials remain outside source control.
 
 ## Phase 10: Unified Wallet Lifecycle
 
@@ -51,6 +51,18 @@ ACTIVE / REVIEW / DROPPED
 ```
 
 The lifecycle does not invent paper observations. Real observations must be added by the market-data/runtime layer. Until the paper gate is satisfied, a wallet remains `review` even when the historical screening score is high. This preserves the framework's separation between historical edge and actionability validation.
+
+## Phase 9: Funding & Cluster Verification
+
+The funding layer verifies evidence that can make multiple wallets non-independent signals. It uses Solana JSON-RPC transaction history and a normalized evidence model.
+
+Components:
+
+- `cluster_analysis.py`: shared-funder, linked-wallet, synchronized-funding and independence calculations.
+- `funding_verifier.py`: collects native balance-transfer evidence using `getSignaturesForAddress` and `getTransaction`.
+- `cluster_provider.py`: decorates an existing wallet provider with funding/cluster evidence.
+
+The implementation is intentionally conservative: missing data is not treated as clean evidence, and common ownership is not asserted solely from similar trading behavior.
 
 ## Phase 7: Verified GMGN Mapping
 
