@@ -67,6 +67,17 @@ class ActionabilityConfig:
 
 
 @dataclass(slots=True)
+class ManualQAConfig:
+    min_sample_trades: int = 15
+    max_sample_trades: int = 20
+    min_actionable_rate: float = 0.50
+    max_transfer_in_rate: float = 0.20
+    min_complete_data_rate: float = 0.90
+    min_repeatable_behavior_rate: float = 0.50
+    require_manual_review_before_watchlist: bool = True
+
+
+@dataclass(slots=True)
 class ScoreConfig:
     realized_performance_weight: float = 0.15
     pnl_ratio_weight: float = 0.10
@@ -91,6 +102,7 @@ class ScreenerConfig:
     risk: RiskConfig = field(default_factory=RiskConfig)
     consistency: ConsistencyConfig = field(default_factory=ConsistencyConfig)
     actionability: ActionabilityConfig = field(default_factory=ActionabilityConfig)
+    manual_qa: ManualQAConfig = field(default_factory=ManualQAConfig)
     score: ScoreConfig = field(default_factory=ScoreConfig)
     min_final_score: float = 7.0
     max_watchlist_size: int = 15
