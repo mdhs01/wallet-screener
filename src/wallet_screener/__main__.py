@@ -1,15 +1,33 @@
+from __future__ import annotations
+
+import argparse
 import json
-from .config import ScreenerConfig
+import os
+
+from .gmgn_provider import GMGNLiveProvider
+from .pipeline import ScreeningPipeline
 from .providers import NullProvider
-from .screener import WalletScreener
 
 
 def main() -> None:
-    provider = NullProvider()
-    screener = WalletScreener(provider, ScreenerConfig())
-    addresses = provider.discover_wallets()
-    results = screener.screen_many(addresses)
-    print(json.dumps([screener.to_dict(r) for r in results], indent=2))
+    parser = argparse.ArgumentParser(description="Run wallet screening pipeline")
+    parser.add_argument("--provider", choices=("null", "gmgn"), default=os.getenv("WALLET_SCREENER_PROVIDER", "null"))
+    parser.add_argument("--max-candidates", type=int, default=None)
+    parser.add_argument("--db", default=os.getenv("WALLET_SCREENER_DB", "data/wallet_screener.db"))
+    args = parser.parse_args()
+
+    provider = GMGNLiveProvider() if args.provider == "gmgn" else NullProvider()
+    pipeline = ScreeningPipeline(provider=provider)
+    report = pipeline.run(max_candidates=args.max_candidates)
+    print(json.dumps({
+        "run_id": report.run_id,
+        "status": report.status,
+        "discovered": report.discovered,
+        "screened": report.screened,
+        "passed": report.passed,
+        "results": report.results,
+        "error": report.error,
+    }, indent=2, default=str))
 
 
 if __name__ == "__main__":
