@@ -1,6 +1,9 @@
 from .api_client import ApiClient, ApiError, ApiResponse
 from .api_config import ApiConfig, ProviderConfig
+from .cluster_analysis import ClusterReport, FundingObservation, WalletLink, analyze_cluster
+from .cluster_provider import FundingAwareProvider
 from .config import PaperTrackConfig, ScreenerConfig
+from .funding_verifier import FundingVerifier
 from .gmgn_adapter import GMGNAdapter, GmgnEndpointMap
 from .gmgn_cli import GmgnCli, GmgnCliConfig, GmgnCliError
 from .gmgn_openapi_contract import GMGNRoute, route_table
@@ -25,44 +28,16 @@ from .watchlist import (
 )
 
 __all__ = [
-    "ApiClient",
-    "ApiConfig",
-    "ApiError",
-    "ApiResponse",
-    "CrossTokenEvidence",
-    "GMGNAdapter",
-    "GMGNLiveProvider",
-    "GMGNRoute",
-    "GmgnCli",
-    "GmgnCliConfig",
-    "GmgnCliError",
-    "GmgnEndpointMap",
-    "ManualQAReport",
-    "NormalizedWallet",
-    "NullProvider",
-    "PaperObservation",
-    "PaperTrackConfig",
-    "PaperTrackSummary",
-    "PaperTracker",
-    "PipelineReport",
-    "ProviderConfig",
-    "RevalidationSnapshot",
-    "SchemaError",
-    "ScreeningPipeline",
-    "ScreeningResult",
-    "ScreeningStore",
-    "ScreenerConfig",
-    "SolanaRpcClient",
-    "SolscanAdapter",
-    "TradeObservation",
-    "WalletDataProvider",
-    "WalletMetrics",
-    "WalletScreener",
-    "WatchlistCategory",
-    "WatchlistEntry",
-    "WatchlistManager",
-    "WatchlistStatus",
-    "build_manual_qa_report",
-    "classify_category",
-    "route_table",
+    "ApiClient", "ApiConfig", "ApiError", "ApiResponse",
+    "ClusterReport", "CrossTokenEvidence", "FundingAwareProvider",
+    "FundingObservation", "FundingVerifier", "GMGNAdapter", "GMGNLiveProvider",
+    "GMGNRoute", "GmgnCli", "GmgnCliConfig", "GmgnCliError", "GmgnEndpointMap",
+    "ManualQAReport", "NormalizedWallet", "NullProvider", "PaperObservation",
+    "PaperTrackConfig", "PaperTrackSummary", "PaperTracker", "PipelineReport",
+    "ProviderConfig", "RevalidationSnapshot", "SchemaError", "ScreeningPipeline",
+    "ScreeningResult", "ScreeningStore", "ScreenerConfig", "SolanaRpcClient",
+    "SolscanAdapter", "TradeObservation", "WalletDataProvider", "WalletLink",
+    "WalletMetrics", "WalletScreener", "WatchlistCategory", "WatchlistEntry",
+    "WatchlistManager", "WatchlistStatus", "analyze_cluster",
+    "build_manual_qa_report", "classify_category", "route_table",
 ]
