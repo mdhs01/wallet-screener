@@ -26,10 +26,32 @@ Wallet screening engine based on the uploaded GMGN Wallet Screening Framework.
 - Phase 18 scheduled runtime with singleton protection, graceful stop, and optional circuit-breaker integration
 - Phase 19 unified one-cycle runtime joining screening, market feed, persistence, and lifecycle
 - Phase 21 runtime CLI shell with explicit once/scheduled/validate/health commands
+- Phase 22 unified environment/runtime configuration with validation
 
 ## Screening flow
 
 Discovery → Surface Filter → Performance → Profit Distribution → Behavior → Risk → Cross-Token → Funding/Cluster → Manual Trade Sample → Manual Review → Paper Track → Watchlist
+
+## Phase 22: Configuration & Secrets
+
+`configuration.py` provides `RuntimeSettings` and `ConfigurationError` as the central runtime configuration contract.
+
+Supported environment variables:
+
+```text
+WALLET_SCREENER_PROVIDER
+WALLET_SCREENER_DB
+WALLET_SCREENER_MAX_CANDIDATES
+WALLET_SCREENER_INTERVAL_SECONDS
+GMGN_CLI_PATH
+GMGN_CHAIN
+GMGN_CLI_TIMEOUT
+GMGN_API_KEY
+```
+
+The configuration layer validates numeric values and supported providers. Secrets are read from environment variables and are not accepted as CLI arguments or stored in source code.
+
+This keeps runtime settings separate from screening logic and gives the deployment layer one consistent configuration object.
 
 ## Phase 21: Runtime CLI
 
@@ -44,27 +66,9 @@ python -m src.wallet_screener.cli scheduled --db data/wallet_screener.db --inter
 
 The CLI intentionally does not accept API keys or other secrets as command-line arguments. Provider construction and credentials remain configuration/runtime concerns.
 
-The current CLI is the deployment shell; it reports readiness for `once` and `scheduled` until a concrete provider/runtime configuration is bound. This prevents accidentally presenting a fake live execution path before real credentials and market contracts are verified.
-
 ## Phase 19: Unified Runtime Job
 
-`unified_runtime.py` provides `UnifiedRuntimeJob` for one read-only end-to-end cycle:
-
-```text
-Discovery / Screening
-        ↓
-Lifecycle evaluation
-        ↓
-Market Feed
-        ↓
-Persistent Paper Tracking
-```
-
-The job returns a single `UnifiedRuntimeReport` containing screening counts, market-feed counts, lifecycle evaluations, and non-fatal errors.
-
-Lifecycle evaluation occurs from the screening result before the current cycle's market observations are ingested, preventing the newly collected market observation from changing the decision that produced the candidate in the same cycle.
-
-The runtime does not place trades, sign transactions, or invent market observations.
+`unified_runtime.py` provides `UnifiedRuntimeJob` for one read-only end-to-end cycle. Lifecycle evaluation occurs from the screening result before the current cycle's market observations are ingested.
 
 ## Phase 18: Scheduler & Continuous Runtime
 
@@ -85,8 +89,6 @@ The runtime does not place trades, sign transactions, or invent market observati
 ## Phase 12: Live Validation
 
 `live_validation.py` provides a read-only runtime validation report. It checks provider capabilities, live candidate discovery, wallet metrics, current holdings, and recent activity.
-
-The validator only reports `ready=true` after at least one wallet is returned and all required checks pass. Empty discovery is not treated as a successful live test.
 
 ## Phase 11: Production Hardening
 
