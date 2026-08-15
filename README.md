@@ -24,35 +24,37 @@ Wallet screening engine based on the uploaded GMGN Wallet Screening Framework.
 - Phase 15 read-only market feed polling with duplicate protection
 - Phase 17 bounded live-market orchestration
 - Phase 18 scheduled runtime with singleton protection, graceful stop, and optional circuit-breaker integration
+- Phase 19 unified one-cycle runtime joining screening, market feed, persistence, and lifecycle
 
 ## Screening flow
 
 Discovery → Surface Filter → Performance → Profit Distribution → Behavior → Risk → Cross-Token → Funding/Cluster → Manual Trade Sample → Manual Review → Paper Track → Watchlist
 
-## Phase 18: Scheduler & Continuous Runtime
+## Phase 19: Unified Runtime Job
 
-`scheduler.py` provides `ScheduledRuntime` for controlled recurring execution of an existing read-only job.
+`unified_runtime.py` provides `UnifiedRuntimeJob` for one read-only end-to-end cycle:
 
 ```text
-ScheduledRuntime
-      ↓
-read-only pipeline / market feed job
-      ↓
-screening + paper tracking + watchlist
+Discovery / Screening
+        ↓
+Lifecycle evaluation
+        ↓
+Market Feed
+        ↓
+Persistent Paper Tracking
 ```
 
-The runtime provides:
+The job returns a single `UnifiedRuntimeReport` containing screening counts, market-feed counts, lifecycle evaluations, and non-fatal errors.
 
-- configurable interval
-- bounded cycle mode for deterministic tests/deployments
-- singleton protection within the process
-- graceful stop with `stop()`
-- optional `CircuitBreaker` integration
-- cycle-level success/failure/skipped accounting
+Lifecycle evaluation occurs from the screening result before the current cycle's market observations are ingested, preventing the newly collected market observation from changing the decision that produced the candidate in the same cycle.
 
-The scheduler does not own screening semantics and does not place orders, sign transactions, or trade.
+The runtime does not place trades, sign transactions, or invent market observations.
 
-See `docs/PHASE18_SCHEDULER.md`.
+See `docs/PHASE19_UNIFIED_RUNTIME.md`.
+
+## Phase 18: Scheduler & Continuous Runtime
+
+`scheduler.py` provides `ScheduledRuntime` for controlled recurring execution of an existing read-only job, with configurable interval, bounded cycles, singleton protection, graceful stop, and cycle accounting.
 
 ## Phase 17: Live Market Loop
 
