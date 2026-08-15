@@ -64,9 +64,11 @@ class ScheduledUnifiedRuntime:
         self.job = job
         self.lock = lock or SingletonLock()
         self._cycle_reports: list[UnifiedRuntimeReport] = []
+        self._runtime: ScheduledRuntime | None = None
 
     def stop(self) -> None:
-        self._runtime.stop()
+        if self._runtime is not None:
+            self._runtime.stop()
 
     def run(self, *, interval_seconds: float, cycles: int | None = None) -> ScheduledUnifiedReport:
         self._cycle_reports = []
@@ -74,14 +76,22 @@ class ScheduledUnifiedRuntime:
             self._execute_once,
             lock=self.lock,
         )
-        scheduler_report = self._runtime.run(
-            interval_seconds=interval_seconds,
-            cycles=cycles,
-        )
+        try:
+            scheduler_report = self._runtime.run(
+                interval_seconds=interval_seconds,
+                cycles=cycles,
+            )
+        finally:
+            self._runtime = None
         return ScheduledUnifiedReport(
             scheduler=scheduler_report,
             cycles=list(self._cycle_reports),
         )
 
     def _execute_once(self) -> None:
-        self._cycle_reports.append(self.job.run_once())
+        report = self.job.run_once()
+        self._cycle_reports.append(report)
+        # Let the scheduler's failure accounting observe a cycle-level runtime
+        # error while preserving the full report for diagnosis.
+        if report.errors:
+            raise RuntimeError("unified_runtime_cycle_failed")
