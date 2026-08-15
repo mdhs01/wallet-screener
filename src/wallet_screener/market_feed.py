@@ -63,7 +63,7 @@ class LiveMarketFeed:
         report.fetched = len(snapshots)
         for snapshot in snapshots:
             try:
-                observation = self.adapter.to_observation(snapshot)
+                observation = self.adapter.to_paper_observation(snapshot)
                 inserted = self.runtime.ingest(observation)
                 if inserted:
                     report.accepted += 1
