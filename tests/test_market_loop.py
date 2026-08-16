@@ -3,14 +3,13 @@ from src.wallet_screener.market_loop import LiveMarketLoop
 from src.wallet_screener.market_observation import MarketSnapshot
 from src.wallet_screener.paper_persistence import PaperObservationStore
 from src.wallet_screener.paper_runtime import PersistentPaperRuntime
-from src.wallet_screener.paper_tracking import PaperTracker
 from src.wallet_screener.persistence import ScreeningStore
 
 
 def _runtime(tmp_path):
     store = ScreeningStore(tmp_path / "db.sqlite")
     paper_store = PaperObservationStore(store.path)
-    return PersistentPaperRuntime(paper_store, PaperTracker())
+    return PersistentPaperRuntime(store=paper_store, lifecycle=None)
 
 
 def test_bounded_live_market_loop(tmp_path):
