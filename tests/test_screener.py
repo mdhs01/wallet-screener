@@ -97,7 +97,6 @@ def good_metrics():
         common_funder_count=0,
         cluster_size=1,
         profit_top_token_share=0.30,
-        profit_top_two_token_profit_share=0.45 if False else 0.45,
         profit_top_two_token_share=0.45,
         early_actionable_rate=0.75,
         current_conviction=0.75,
