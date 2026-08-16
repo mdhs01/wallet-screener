@@ -1,5 +1,6 @@
 from src.wallet_screener.lifecycle import WalletLifecycle
 from src.wallet_screener.paper_tracking import PaperObservation
+from src.wallet_screener.persistence import ScreeningStore
 from src.wallet_screener.watchlist import WatchlistStatus
 
 
@@ -19,8 +20,8 @@ def make_observation(i: int) -> PaperObservation:
     )
 
 
-def test_lifecycle_blocks_watchlist_until_paper_ready():
-    lifecycle = WalletLifecycle()
+def test_lifecycle_blocks_watchlist_until_paper_ready(tmp_path):
+    lifecycle = WalletLifecycle(store=ScreeningStore(tmp_path / "db.sqlite"))
     result = lifecycle.evaluate_wallet(
         wallet="wallet-1",
         score=8.5,
@@ -30,8 +31,8 @@ def test_lifecycle_blocks_watchlist_until_paper_ready():
     assert result.paper_summary["ready_for_watchlist"] is False
 
 
-def test_lifecycle_can_promote_after_paper_tracking():
-    lifecycle = WalletLifecycle()
+def test_lifecycle_can_promote_after_paper_tracking(tmp_path):
+    lifecycle = WalletLifecycle(store=ScreeningStore(tmp_path / "db.sqlite"))
     for i in range(10):
         lifecycle.add_paper_observation(make_observation(i))
 
