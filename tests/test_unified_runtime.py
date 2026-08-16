@@ -3,10 +3,9 @@ from src.wallet_screener.market_feed import InMemoryMarketSource, LiveMarketFeed
 from src.wallet_screener.market_observation import MarketSnapshot
 from src.wallet_screener.paper_persistence import PaperObservationStore
 from src.wallet_screener.paper_runtime import PersistentPaperRuntime
-from src.wallet_screener.paper_tracking import PaperTracker
-from src.wallet_screener.persistence import ScreeningStore
 from src.wallet_screener.pipeline import ScreeningPipeline
 from src.wallet_screener.providers import NullProvider
+from src.wallet_screener.persistence import ScreeningStore
 from src.wallet_screener.unified_runtime import UnifiedRuntimeJob
 
 
@@ -14,7 +13,7 @@ def test_unified_runtime_runs_one_cycle(tmp_path):
     store = ScreeningStore(tmp_path / "db.sqlite")
     lifecycle = WalletLifecycle(store=store)
     paper_store = PaperObservationStore(store.path)
-    runtime = PersistentPaperRuntime(paper_store, PaperTracker())
+    runtime = PersistentPaperRuntime(lifecycle=lifecycle, store=paper_store)
     snapshot = MarketSnapshot(
         wallet="wallet-1",
         token="token-1",
