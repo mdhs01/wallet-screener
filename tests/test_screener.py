@@ -97,6 +97,7 @@ def good_metrics():
         common_funder_count=0,
         cluster_size=1,
         profit_top_token_share=0.30,
+        profit_top_two_token_profit_share=0.45 if False else 0.45,
         profit_top_two_token_share=0.45,
         early_actionable_rate=0.75,
         current_conviction=0.75,
@@ -197,3 +198,30 @@ def test_manual_sample_exposes_slow_entry_behavior():
     result = WalletScreener(FixtureProvider(metrics, trades=trades), ScreenerConfig()).screen(metrics.address)
     assert "median_entry_latency_above_target" in result.warnings
     assert result.manual_qa["median_entry_latency_minutes"] == 30.0
+
+
+def test_frequency_tiers_are_calibrated():
+    screener = WalletScreener(FixtureProvider(good_metrics()), ScreenerConfig())
+    assert screener.frequency_tier(300) == "normal"
+    assert screener.frequency_tier(301) == "active"
+    assert screener.frequency_tier(500) == "active"
+    assert screener.frequency_tier(501) == "high_frequency"
+    assert screener.frequency_tier(750) == "high_frequency"
+    assert screener.frequency_tier(751) == "very_high_frequency"
+
+
+def test_high_frequency_wallet_can_reach_deep_screen():
+    metrics = good_metrics()
+    metrics.tx_7d = 700
+    result = WalletScreener(FixtureProvider(metrics), ScreenerConfig()).screen(metrics.address)
+    assert result.stage in {"deep_review", "manual_review_required", "final_watchlist"}
+    assert "high_frequency_deep_screen_required" in result.warnings
+    assert "tx_7d_too_high" not in result.failed_rules
+
+
+def test_very_high_frequency_wallet_is_rejected_at_surface():
+    metrics = good_metrics()
+    metrics.tx_7d = 751
+    result = WalletScreener(FixtureProvider(metrics), ScreenerConfig()).screen(metrics.address)
+    assert result.stage == "surface_filter"
+    assert "tx_7d_too_high" in result.failed_rules
