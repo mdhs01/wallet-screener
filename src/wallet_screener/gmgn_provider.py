@@ -73,15 +73,18 @@ class GMGNLiveProvider(WalletDataProvider):
         realized7 = float(stats7.get("realized_profit") or 0.0)
         realized30 = float(stats30.get("realized_profit") or 0.0)
         cost30 = float(stats30.get("total_cost") or 0.0)
-        tx7 = int(stats7.get("buy") or stats7.get("buy_count") or 0) + int(stats7.get("sell") or stats7.get("sell_count") or 0)
-        tx30 = int(stats30.get("buy") or stats30.get("buy_count") or 0) + int(stats30.get("sell") or stats30.get("sell_count") or 0)
-        token_diversity = int(pnl30.get("token_num") or stats30.get("token_num") or 0)
+        tx7 = int(stats7.get("buy") if stats7.get("buy") is not None else stats7.get("buy_count") or 0) + int(stats7.get("sell") if stats7.get("sell") is not None else stats7.get("sell_count") or 0)
+        tx30 = int(stats30.get("buy") if stats30.get("buy") is not None else stats30.get("buy_count") or 0) + int(stats30.get("sell") if stats30.get("sell") is not None else stats30.get("sell_count") or 0)
+        token_diversity = int(pnl30.get("token_num") if pnl30.get("token_num") is not None else stats30.get("token_num") or 0)
         followers = int(common.get("follow_count") or common.get("followers_count") or 0)
+
+        win7 = pnl7.get("winrate") if pnl7.get("winrate") is not None else stats7.get("winrate")
+        win30 = pnl30.get("winrate") if pnl30.get("winrate") is not None else stats30.get("winrate")
 
         return {
             "address": address,
-            "win_rate_7d": float(pnl7.get("winrate") if pnl7.get("winrate") is not None else stats7.get("winrate") or 0.0),
-            "win_rate_30d": float(pnl30.get("winrate") if pnl30.get("winrate") is not None else stats30.get("winrate") or 0.0),
+            "win_rate_7d": float(win7 or 0.0),
+            "win_rate_30d": float(win30 or 0.0),
             "realized_pnl_7d": realized7,
             "realized_pnl_30d": realized30,
             "unrealized_pnl": float(stats30.get("unrealized_profit") or 0.0),
@@ -95,8 +98,6 @@ class GMGNLiveProvider(WalletDataProvider):
             "trade_count_30d": tx30,
             "public_followers": followers,
             "creator_open_count": int(common.get("created_token_count") or 0),
-            # Presence of a funder is evidence that needs deeper verification;
-            # it is not equivalent to a failed cluster-independence score.
             "independence_score": 1.0,
             "avg_hold_minutes": float(pnl30.get("avg_holding_period") or 0.0) / 60.0,
         }
