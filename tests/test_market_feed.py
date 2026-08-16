@@ -9,7 +9,7 @@ from src.wallet_screener.persistence import ScreeningStore
 def _runtime(tmp_path):
     store = ScreeningStore(tmp_path / "db.sqlite")
     paper_store = PaperObservationStore(store.path)
-    return PersistentPaperRuntime(paper_store, PaperTracker())
+    return PersistentPaperRuntime(store=paper_store, lifecycle=None)
 
 
 def _snapshot() -> MarketSnapshot:
