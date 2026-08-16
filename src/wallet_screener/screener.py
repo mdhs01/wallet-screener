@@ -234,7 +234,10 @@ class WalletScreener:
         current_winner = sum(max(h.current_value, 0.0) for h in holdings if h.unrealized_pnl > 0)
         current_total = sum(max(h.current_value, 0.0) for h in holdings)
         if total_original > 0:
-            metrics.current_conviction = max(metrics.current_conviction, min(1.0, current_total / total_original))
+            # Current holdings are the freshest evidence of conviction. When a
+            # holdings snapshot is available, it should be authoritative rather
+            # than allowing a stale aggregate metric to mask a current drawdown.
+            metrics.current_conviction = min(1.0, current_total / total_original)
         if current_total > 0:
             metrics.current_winner_exposure = current_winner / current_total
         metrics.bag_zero_count = max(metrics.bag_zero_count, sum(1 for h in holdings if h.is_zero_value))
