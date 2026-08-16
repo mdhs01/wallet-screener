@@ -16,6 +16,14 @@ class WalletScreener:
         self.provider = provider
         self.config = config or ScreenerConfig()
 
+    @staticmethod
+    def _coerce_trade(value):
+        if isinstance(value, TradeObservation):
+            return value
+        if isinstance(value, dict):
+            return TradeObservation(**{k: v for k, v in value.items() if k in TradeObservation.__dataclass_fields__})
+        raise TypeError(f"Unsupported trade observation type: {type(value).__name__}")
+
     def screen(self, address: str) -> ScreeningResult:
         raw = self.provider.get_wallet_metrics(address)
         metrics = WalletMetrics(**{k: v for k, v in raw.items() if k in WalletMetrics.__dataclass_fields__})
@@ -31,7 +39,7 @@ class WalletScreener:
             for h in self.provider.get_current_holdings(address)
         ]
         trades = [
-            TradeObservation(**{k: v for k, v in t.items() if k in TradeObservation.__dataclass_fields__})
+            self._coerce_trade(t)
             for t in self.provider.get_trade_sample(address, limit=self.config.manual_qa.max_sample_trades)
         ]
         metrics = calculate_derived_metrics(metrics, trades)
