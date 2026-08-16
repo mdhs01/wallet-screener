@@ -66,18 +66,26 @@ class WalletLifecycle:
         paper_summary = self._paper_summary(wallet)
         selected_category = category or WatchlistCategory.EXPERIMENTAL
 
+        # Historical screening success is never sufficient for activation.
+        # The paper-track gate must be satisfied before a wallet can become
+        # ACTIVE in the watchlist.
+        effective_passed = bool(passed and paper_summary.ready_for_watchlist)
+        lifecycle_notes = list(notes or [])
+        if not paper_summary.ready_for_watchlist:
+            lifecycle_notes.append("paper_tracking_not_ready")
+
         entry = self.watchlist.upsert(
             wallet=wallet,
             score=score,
             timestamp=ts,
             category=selected_category,
-            passed=passed,
+            passed=effective_passed,
             edge_decay_score=edge_decay_score,
             style_change_score=style_change_score,
             crowding_score=crowding_score,
             independence_score=independence_score,
             paper_summary=paper_summary,
-            notes=notes,
+            notes=lifecycle_notes,
         )
 
         status = entry.status.value
