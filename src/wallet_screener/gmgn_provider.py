@@ -30,11 +30,7 @@ def _stat(payload: Any) -> dict[str, Any]:
 
 
 class GMGNLiveProvider(WalletDataProvider):
-    """Maps documented GMGN wallet/market queries into the screener contract.
-
-    Unsupported source-framework layers are returned explicitly as unavailable
-    rather than being fabricated from unrelated metrics.
-    """
+    """Maps documented GMGN wallet/market queries into the screener contract."""
 
     def __init__(self, cli: GmgnCli | None = None) -> None:
         self.cli = cli or GmgnCli()
@@ -70,18 +66,22 @@ class GMGNLiveProvider(WalletDataProvider):
     def get_wallet_metrics(self, address: str) -> dict[str, Any]:
         stats7 = _stat(self.cli.portfolio_stats(address, "7d"))
         stats30 = _stat(self.cli.portfolio_stats(address, "30d"))
+        pnl7 = stats7.get("pnl_stat") if isinstance(stats7.get("pnl_stat"), dict) else {}
+        pnl30 = stats30.get("pnl_stat") if isinstance(stats30.get("pnl_stat"), dict) else {}
         common = stats30.get("common") if isinstance(stats30.get("common"), dict) else {}
+
         realized7 = float(stats7.get("realized_profit") or 0.0)
         realized30 = float(stats30.get("realized_profit") or 0.0)
         cost30 = float(stats30.get("total_cost") or 0.0)
-        tx7 = int(stats7.get("buy_count") or 0) + int(stats7.get("sell_count") or 0)
-        tx30 = int(stats30.get("buy_count") or 0) + int(stats30.get("sell_count") or 0)
-        token_diversity = int(stats30.get("token_num") or 0)
+        tx7 = int(stats7.get("buy") or 0) + int(stats7.get("sell") or 0)
+        tx30 = int(stats30.get("buy") or 0) + int(stats30.get("sell") or 0)
+        token_diversity = int(pnl30.get("token_num") or 0)
         followers = int(common.get("follow_count") or common.get("followers_count") or 0)
+
         return {
             "address": address,
-            "win_rate_7d": float(stats7.get("winrate") or 0.0),
-            "win_rate_30d": float(stats30.get("winrate") or 0.0),
+            "win_rate_7d": float(pnl7.get("winrate") or 0.0),
+            "win_rate_30d": float(pnl30.get("winrate") or 0.0),
             "realized_pnl_7d": realized7,
             "realized_pnl_30d": realized30,
             "unrealized_pnl": float(stats30.get("unrealized_profit") or 0.0),
@@ -91,22 +91,27 @@ class GMGNLiveProvider(WalletDataProvider):
             "token_diversity_30d": token_diversity,
             "cost_7d": float(stats7.get("total_cost") or 0.0),
             "cost_30d": cost30,
-            "balance_native": float(stats30.get("native_balance") or common.get("native_balance") or 0.0),
+            "balance_native": float(stats30.get("native_balance") or 0.0),
             "trade_count_30d": tx30,
             "public_followers": followers,
             "creator_open_count": int(common.get("created_token_count") or 0),
-            "independence_score": 0.0 if common.get("fund_from_address") else 1.0,
+            # Presence of a funder is evidence that needs deeper verification;
+            # it is not equivalent to a failed cluster-independence score.
+            "independence_score": 1.0,
+            "avg_hold_minutes": float(pnl30.get("avg_holding_period") or 0.0) / 60.0,
         }
 
     def get_current_holdings(self, address: str) -> list[dict[str, Any]]:
         rows = _rows(self.cli.portfolio_holdings(address, limit=50), "holdings")
+        if not rows:
+            rows = _rows(self.cli.portfolio_holdings(address, limit=50), "list")
         output: list[dict[str, Any]] = []
         for row in rows:
             token = row.get("token") if isinstance(row.get("token"), dict) else {}
             output.append({
                 "token": str(token.get("address") or token.get("symbol") or "unknown"),
                 "current_value": float(row.get("usd_value") or 0.0),
-                "original_value": float(row.get("cost") or 0.0),
+                "original_value": float(row.get("cost") or row.get("history_bought_cost") or 0.0),
                 "unrealized_pnl": float(row.get("unrealized_profit") or 0.0),
                 "held_after_partial_tp": bool((row.get("sell_tx_count") or 0) > 0 and (row.get("usd_value") or 0) > 0),
                 "is_zero_value": float(row.get("usd_value") or 0.0) <= 0.0,
