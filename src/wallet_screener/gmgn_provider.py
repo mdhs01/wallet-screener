@@ -54,13 +54,17 @@ class GMGNLiveProvider(WalletDataProvider):
 
     def discover_wallets(self) -> list[str]:
         payload = self.cli.track_smartmoney(limit=100)
-        rows = _rows(payload, "trades") or _rows(payload, "items") or _rows(payload, "results")
+        rows = (
+            _rows(payload, "trades")
+            or _rows(payload, "items")
+            or _rows(payload, "results")
+            or _rows(payload, "list")
+        )
         addresses: list[str] = []
         for row in rows:
-            value = row.get("wallet_address") or row.get("wallet") or row.get("address")
+            value = row.get("maker") or row.get("wallet_address") or row.get("wallet") or row.get("address")
             if value:
                 addresses.append(str(value))
-        # Preserve first occurrence order.
         return list(dict.fromkeys(addresses))
 
     def get_wallet_metrics(self, address: str) -> dict[str, Any]:
@@ -130,13 +134,7 @@ class GMGNLiveProvider(WalletDataProvider):
         return trades[:limit]
 
     def get_cross_token_evidence(self, address: str) -> CrossTokenEvidence:
-        # GMGN's documented portfolio activity is enough to identify token
-        # diversity, but not enough to prove the framework's Wallet Radar
-        # repeated-early + shared-holdings evidence. Keep this layer explicit.
         return CrossTokenEvidence()
 
     def get_funding_cluster(self, address: str) -> dict[str, Any]:
-        # Funding source identity is exposed in GMGN common metadata, but a
-        # complete synchronized funding/cluster analysis still requires an
-        # explorer/RPC layer. Do not infer cluster size from one funder field.
         return {"common_funder_count": 0, "cluster_size": 1, "independence_score": 0.0}
