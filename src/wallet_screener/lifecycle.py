@@ -40,6 +40,12 @@ class WalletLifecycle:
         self.paper_store = paper_store or PaperObservationStore(self.store.path)
 
     def add_paper_observation(self, observation: PaperObservation) -> bool:
+        """Persist and register an observation exactly once.
+
+        The persistence layer is authoritative for idempotency. The in-memory
+        tracker is updated only when the SQLite insert succeeds, preventing a
+        duplicate ingest from being counted twice.
+        """
         inserted = self.paper_store.add(observation, int(time()))
         if inserted:
             self.paper_tracker.add(observation)
@@ -66,9 +72,6 @@ class WalletLifecycle:
         paper_summary = self._paper_summary(wallet)
         selected_category = category or WatchlistCategory.EXPERIMENTAL
 
-        # Historical screening success is never sufficient for activation.
-        # The paper-track gate must be satisfied before a wallet can become
-        # ACTIVE in the watchlist.
         effective_passed = bool(passed and paper_summary.ready_for_watchlist)
         lifecycle_notes = list(notes or [])
         if not paper_summary.ready_for_watchlist:
