@@ -39,14 +39,11 @@ class PersistentPaperRuntime:
         for observation in observations:
             if observation.wallet != wallet:
                 continue
-            if self.store.add(observation, int(time())):
+            if self._persist_once(observation):
                 report.inserted += 1
-                self.lifecycle.add_paper_observation(observation)
             else:
                 report.duplicates += 1
 
-        # Lifecycle uses the persisted tracker state indirectly through the in-memory
-        # observations ingested during this invocation. No market order is placed.
         entry = next((item for item in self.lifecycle.watchlist.entries() if item.wallet == wallet), None)
         if entry is not None:
             report.lifecycle = self.lifecycle.evaluate_wallet(
@@ -63,9 +60,15 @@ class PersistentPaperRuntime:
         report = PaperRuntimeReport(wallet=wallet)
         for observation in observations:
             report.observed += 1
-            if self.store.add(observation, int(time())):
+            if self._persist_once(observation):
                 report.inserted += 1
-                self.lifecycle.add_paper_observation(observation)
             else:
                 report.duplicates += 1
         return report
+
+    def _persist_once(self, observation: PaperObservation) -> bool:
+        """Persist the observation and update lifecycle exactly once."""
+        inserted = self.store.add(observation, int(time()))
+        if inserted:
+            self.lifecycle.paper_tracker.add(observation)
+        return inserted
