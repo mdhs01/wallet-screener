@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from dataclasses import asdict
 from pathlib import Path
@@ -36,11 +37,19 @@ def _print(data: dict) -> None:
     print(json.dumps(data, indent=2, sort_keys=True))
 
 
+def _api_configured() -> bool:
+    """Return whether the minimum GMGN credential is configured in environment."""
+    return bool(os.getenv("GMGN_API_KEY", "").strip())
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
 
     if args.command == "health":
-        report = check_health(db_path=Path(args.db))
+        report = check_health(
+            db_path=Path(args.db),
+            api_configured=_api_configured(),
+        )
         _print(asdict(report))
         return 0 if report.status == "healthy" else 1
 
