@@ -5,7 +5,7 @@ from time import time
 from typing import Iterable
 
 from .paper_persistence import PaperObservationStore
-from .paper_runtime import PersistentPaperRuntime, PaperObservationSource
+from .paper_runtime import PersistentPaperRuntime
 from .paper_tracking import PaperObservation
 
 
@@ -33,10 +33,9 @@ class LivePaperSession:
         for observation in observations:
             report.observations_seen += 1
             try:
-                result = self.runtime.ingest(observation)
-                report.observations_accepted += result.accepted
+                result = self.runtime.ingest_observations([observation])
+                report.observations_accepted += result.inserted
                 report.duplicates += result.duplicates
-                report.rejected += result.rejected
             except Exception:
                 report.errors += 1
         report.finished_ts = int(time())
