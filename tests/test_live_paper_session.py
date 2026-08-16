@@ -1,8 +1,7 @@
 from src.wallet_screener.live_paper_session import LivePaperSession
 from src.wallet_screener.paper_persistence import PaperObservationStore
 from src.wallet_screener.paper_runtime import PersistentPaperRuntime
-from src.wallet_screener.paper_tracking import PaperTracker
-from src.wallet_screener.paper_tracking import PaperObservation
+from src.wallet_screener.paper_tracking import PaperTracker, PaperObservation
 
 
 def _observation(ts):
@@ -13,16 +12,17 @@ def _observation(ts):
         wallet_entry_ts=ts,
         wallet_exit_ts=None,
         hypothetical_entry_ts=ts,
-        hypothetical_exit_ts=None,
-        entry_price_usd=1.0,
-        exit_price_usd=None,
+        hypothetical_exit_ts=ts + 60,
+        wallet_entry_price=1.0,
+        wallet_exit_price=1.02,
+        hypothetical_entry_price=1.0,
+        hypothetical_exit_price=1.02,
+        liquidity_at_signal_usd=100_000,
+        hypothetical_position_usd=100,
+        slippage_pct=0.0,
         actionable=True,
         false_signal=False,
-        missed_signal=False,
-        slippage_pct=0.0,
-        hypothetical_return_pct=2.0,
-        max_drawdown_pct=1.0,
-        latency_ms=100.0,
+        missed=False,
     )
 
 
