@@ -8,7 +8,10 @@ class SurfaceConfig:
     max_win_rate_for_investigation: float = 0.80
     min_realized_pnl_7d: float = 1.0
     min_realized_pnl_30d: float = 1.0
-    min_pnl_ratio: float = 1.0
+    # Calibrated against the current live GMGN Smart Money sample: 0.20
+    # preserves the strongest candidate pool while avoiding the previous
+    # production floor of 1.0, which yielded zero candidates in the sample.
+    min_pnl_ratio: float = 0.20
     ideal_pnl_ratio: float = 1.5
     # Calibrated against the live Smart Money sample: TX7 > 750 remains a
     # surface rejection, while lower frequency bands are classified rather
