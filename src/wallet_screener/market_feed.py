@@ -64,13 +64,13 @@ class LiveMarketFeed:
         for snapshot in snapshots:
             try:
                 observation = self.adapter.to_paper_observation(snapshot)
-                inserted = self.runtime.ingest(observation)
-                if inserted:
-                    report.accepted += 1
+                runtime_report = self.runtime.ingest_observations([observation])
+                if runtime_report.inserted:
+                    report.accepted += runtime_report.inserted
                     if self.on_observation is not None:
                         self.on_observation(observation)
                 else:
-                    report.duplicates += 1
+                    report.duplicates += runtime_report.duplicates
             except (ValueError, TypeError):
                 report.rejected += 1
         report.finished_ts = int(time())
