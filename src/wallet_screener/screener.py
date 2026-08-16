@@ -56,8 +56,18 @@ class WalletScreener:
             failed.append("realized_pnl_30d_not_meaningful")
         if metrics.pnl_ratio < self.config.surface.min_pnl_ratio:
             failed.append("pnl_ratio_below_min")
-        if metrics.tx_7d > self.config.surface.max_tx_7d:
+
+        # Frequency is now classified before applying the hard cap. The live
+        # calibration showed that 300 was too restrictive, while >750 remained
+        # a useful surface rejection boundary.
+        frequency_tier = self.frequency_tier(metrics.tx_7d)
+        if frequency_tier == "active":
+            warnings.append("high_frequency_active")
+        elif frequency_tier == "high_frequency":
+            warnings.append("high_frequency_deep_screen_required")
+        elif frequency_tier == "very_high_frequency":
             failed.append("tx_7d_too_high")
+
         if metrics.tx_30d > self.config.surface.investigate_tx_30d:
             warnings.append("tx_30d_requires_investigation")
         if metrics.token_diversity_30d < self.config.surface.min_token_diversity_30d:
@@ -75,6 +85,7 @@ class WalletScreener:
             return ScreeningResult(address, False, "surface_filter", 0.0, reasons, failed, warnings, metrics, layer_scores)
 
         layer_scores["surface"] = 1.0
+        reasons.append(f"transaction_frequency_{frequency_tier}")
 
         # Layers 3–5 — realized performance and profit distribution.
         if metrics.unrealized_to_realized_ratio > 10:
@@ -225,6 +236,15 @@ class WalletScreener:
             layer_scores,
             manual_qa_payload,
         )
+
+    def frequency_tier(self, tx_7d: int) -> str:
+        if tx_7d <= self.config.surface.normal_tx_7d_max:
+            return "normal"
+        if tx_7d <= self.config.surface.active_tx_7d_max:
+            return "active"
+        if tx_7d <= self.config.surface.max_tx_7d:
+            return "high_frequency"
+        return "very_high_frequency"
 
     @staticmethod
     def _apply_holdings(metrics: WalletMetrics, holdings: list[HoldingSnapshot]) -> None:
