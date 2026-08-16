@@ -2,7 +2,6 @@ from src.wallet_screener.market_feed import InMemoryMarketSource, LiveMarketFeed
 from src.wallet_screener.market_observation import MarketSnapshot
 from src.wallet_screener.paper_persistence import PaperObservationStore
 from src.wallet_screener.paper_runtime import PersistentPaperRuntime
-from src.wallet_screener.paper_tracking import PaperTracker
 from src.wallet_screener.persistence import ScreeningStore
 
 
