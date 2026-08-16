@@ -18,6 +18,7 @@ class PaperSessionReport:
     duplicates: int = 0
     rejected: int = 0
     errors: int = 0
+    error_details: list[str] | None = None
 
 
 class LivePaperSession:
@@ -29,18 +30,16 @@ class LivePaperSession:
 
     def ingest(self, observations: Iterable[PaperObservation]) -> PaperSessionReport:
         started = int(time())
-        report = PaperSessionReport(started_ts=started, finished_ts=started)
+        report = PaperSessionReport(started_ts=started, finished_ts=started, error_details=[])
         for observation in observations:
             report.observations_seen += 1
             try:
                 result = self.runtime.ingest_observations([observation])
                 report.observations_accepted += result.inserted
                 report.duplicates += result.duplicates
-                # PersistentPaperRuntime currently ignores malformed/wrong-wallet
-                # observations rather than exposing a rejected count, so only
-                # inserted and duplicate outcomes are reflected here.
-            except Exception:
+            except Exception as exc:
                 report.errors += 1
+                report.error_details.append(f"{type(exc).__name__}: {exc}")
         report.finished_ts = int(time())
         return report
 
