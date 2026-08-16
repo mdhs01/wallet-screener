@@ -4,7 +4,6 @@ from src.wallet_screener.market_observation import MarketSnapshot
 from src.wallet_screener.observability import Observability, RuntimeMetrics
 from src.wallet_screener.paper_persistence import PaperObservationStore
 from src.wallet_screener.paper_runtime import PersistentPaperRuntime
-from src.wallet_screener.paper_tracking import PaperTracker
 from src.wallet_screener.persistence import ScreeningStore
 from src.wallet_screener.pipeline import ScreeningPipeline
 from src.wallet_screener.providers import NullProvider
@@ -13,10 +12,10 @@ from src.wallet_screener.unified_runtime import UnifiedRuntimeJob
 
 def _build_runtime(tmp_path, snapshots):
     store = ScreeningStore(tmp_path / "integration.sqlite")
-    paper_store = PaperObservationStore(store.path)
-    paper_runtime = PersistentPaperRuntime(paper_store, PaperTracker())
-    feed = LiveMarketFeed(InMemoryMarketSource(snapshots), paper_runtime)
     lifecycle = WalletLifecycle(store=store)
+    paper_store = PaperObservationStore(store.path)
+    paper_runtime = PersistentPaperRuntime(lifecycle=lifecycle, store=paper_store)
+    feed = LiveMarketFeed(InMemoryMarketSource(snapshots), paper_runtime)
     metrics = RuntimeMetrics()
     observability = Observability(metrics=metrics, logger_name="wallet_screener.integration")
     job = UnifiedRuntimeJob(
