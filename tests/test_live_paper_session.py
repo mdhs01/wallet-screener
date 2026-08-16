@@ -28,7 +28,13 @@ def _observation(ts):
 
 def test_live_paper_session_ingests_idempotently(tmp_path):
     store = PaperObservationStore(tmp_path / "paper.sqlite")
-    runtime = PersistentPaperRuntime(store, PaperTracker())
+    runtime = PersistentPaperRuntime(
+        store=store,
+        lifecycle=None,
+    )
+    # Keep the explicit tracker contract visible without relying on positional
+    # argument ordering between lifecycle/store.
+    runtime.lifecycle.paper_tracker = PaperTracker()
     session = LivePaperSession(store, runtime)
 
     first = session.ingest([_observation(100)])
