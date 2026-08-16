@@ -10,7 +10,12 @@ class SurfaceConfig:
     min_realized_pnl_30d: float = 1.0
     min_pnl_ratio: float = 1.0
     ideal_pnl_ratio: float = 1.5
-    max_tx_7d: int = 300
+    # Calibrated against the live Smart Money sample: TX7 > 750 remains a
+    # surface rejection, while lower frequency bands are classified rather
+    # than rejected outright.
+    max_tx_7d: int = 750
+    normal_tx_7d_max: int = 300
+    active_tx_7d_max: int = 500
     investigate_tx_30d: int = 3000
     min_token_diversity_30d: int = 10
     min_balance_native: float = 0.01
