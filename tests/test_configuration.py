@@ -3,6 +3,7 @@ import os
 import pytest
 
 from src.wallet_screener.configuration import ConfigurationError, RuntimeSettings
+from src.wallet_screener.config import ScreenerConfig
 
 
 def test_defaults(monkeypatch):
@@ -35,3 +36,11 @@ def test_provider_validation(monkeypatch):
     settings = RuntimeSettings.from_env()
     with pytest.raises(ConfigurationError):
         settings.validate()
+
+
+def test_surface_calibration_defaults():
+    config = ScreenerConfig()
+    assert config.surface.min_pnl_ratio == 0.20
+    assert config.surface.max_tx_7d == 750
+    assert config.surface.normal_tx_7d_max == 300
+    assert config.surface.active_tx_7d_max == 500
