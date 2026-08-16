@@ -4,7 +4,6 @@ from dataclasses import dataclass, field
 from time import time
 from typing import Any
 
-from .config import ScreenerConfig
 from .models import ScreeningResult, WalletMetrics
 from .persistence import ScreeningStore
 from .providers import WalletDataProvider
@@ -25,6 +24,23 @@ class PipelineReport:
     error: str | None = None
 
 
+class _SurfaceMetricsProvider:
+    """Proxy that reuses already-fetched metrics for the current wallet."""
+
+    def __init__(self, provider: WalletDataProvider, address: str, metrics: dict[str, Any]) -> None:
+        self._provider = provider
+        self._address = address
+        self._metrics = metrics
+
+    def get_wallet_metrics(self, address: str):
+        if address == self._address:
+            return self._metrics
+        return self._provider.get_wallet_metrics(address)
+
+    def __getattr__(self, name: str):
+        return getattr(self._provider, name)
+
+
 class ScreeningPipeline:
     """Single orchestration path from discovery to persisted screening results.
 
@@ -36,10 +52,12 @@ class ScreeningPipeline:
     def __init__(
         self,
         provider: WalletDataProvider,
-        config: ScreenerConfig | None = None,
+        config=None,
         store: ScreeningStore | None = None,
     ) -> None:
         self.provider = provider
+        self.config = config
+        from .config import ScreenerConfig
         self.config = config or ScreenerConfig()
         self.store = store or ScreeningStore()
         self.screener = WalletScreener(provider, self.config)
@@ -75,7 +93,11 @@ class ScreeningPipeline:
                     )
                     report.surface_rejected += 1
                 else:
-                    result = self.screener.screen(address)
+                    # Reuse the already-fetched stats so deep screening adds only
+                    # holdings/activity/etc. requests instead of a second stats call.
+                    proxy = _SurfaceMetricsProvider(self.provider, address, raw)
+                    deep_screener = WalletScreener(proxy, self.config)
+                    result = deep_screener.screen(address)
                     result.reasons = list(dict.fromkeys([*reasons, *result.reasons]))
                     report.deep_screened += 1
 
