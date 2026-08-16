@@ -36,6 +36,9 @@ class LivePaperSession:
                 result = self.runtime.ingest_observations([observation])
                 report.observations_accepted += result.inserted
                 report.duplicates += result.duplicates
+                # PersistentPaperRuntime currently ignores malformed/wrong-wallet
+                # observations rather than exposing a rejected count, so only
+                # inserted and duplicate outcomes are reflected here.
             except Exception:
                 report.errors += 1
         report.finished_ts = int(time())
